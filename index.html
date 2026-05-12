@@ -2240,19 +2240,26 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  // If subscribed — unlimited access
+  // If subscribed or logged in as subscriber — unlimited access
   if (isSubscribed) {
-    // proceed normally
-  } else {
-    // Increment free message counter
-    freeMessageCount++;
-    // Save to localStorage immediately so refreshing doesn't reset it
-    localStorage.setItem('hw_free_count', freeMessageCount.toString());
-    // Try to save count to Supabase if logged in
-    if (currentUser) {
-      try { await saveMessageCount(); } catch(e) { console.log('save failed', e); }
+    // proceed normally — no limits
+  } else if (currentUser) {
+    // Logged in but subscription not confirmed — re-check before blocking
+    await loadUserProfile();
+    if (isSubscribed) {
+      // They are subscribed — proceed
+    } else {
+      freeMessageCount++;
+      localStorage.setItem('hw_free_count', freeMessageCount.toString());
+      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+        showPaywall();
+        return;
+      }
     }
-    // Check free message limit — show paywall after 5 messages
+  } else {
+    // Not logged in — apply free limit
+    freeMessageCount++;
+    localStorage.setItem('hw_free_count', freeMessageCount.toString());
     if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
@@ -2347,28 +2354,37 @@ async function initAuth() {
 
 async function loadUserProfile() {
   if (!currentUser) return;
+  // Always clear localStorage when a user is logged in — prevents stale paywall
+  localStorage.removeItem('hw_free_count');
+  freeMessageCount = 0;
+
   let data = null;
-  const byId = await sbClient.from('profiles').select('*').eq('id', currentUser.id).single();
-  if (byId.data) {
-    data = byId.data;
-  } else {
-    const byEmail = await sbClient.from('profiles').select('*').eq('email', currentUser.email).single();
-    data = byEmail.data;
-  }
-  if (data) {
-    isSubscribed = data.is_subscribed === true;
-    if (isSubscribed) {
-      localStorage.removeItem('hw_free_count');
-      freeMessageCount = 0;
-      hidePaywall();
-      enableChat();
+  try {
+    const byId = await sbClient.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (byId.data) {
+      data = byId.data;
     } else {
-      const storedCount = parseInt(localStorage.getItem('hw_free_count') || '0');
-      freeMessageCount = Math.max(data.message_count || 0, storedCount);
-      if (freeMessageCount >= FREE_MESSAGE_LIMIT) showPaywall();
+      const byEmail = await sbClient.from('profiles').select('*').eq('email', currentUser.email).single();
+      data = byEmail.data;
     }
+  } catch(e) {
+    console.log('Profile fetch error:', e);
+  }
+
+  if (data && data.is_subscribed === true) {
+    isSubscribed = true;
+    localStorage.removeItem('hw_free_count');
+    freeMessageCount = 0;
+    hidePaywall();
+    enableChat();
+  } else if (data && data.is_subscribed !== true) {
+    isSubscribed = false;
+    if (freeMessageCount >= FREE_MESSAGE_LIMIT) showPaywall();
   } else {
-    if (freeMessageCount >= FREE_MESSAGE_LIMIT && !isSubscribed) showPaywall();
+    // No profile found at all — do NOT show paywall for logged in users
+    // They paid — give benefit of the doubt
+    isSubscribed = false;
+    hidePaywall();
   }
 }
 
