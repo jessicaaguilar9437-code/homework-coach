@@ -269,6 +269,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .pperiod{font-size:.84rem;color:rgba(255,255,255,.52);margin-bottom:8px;font-weight:600;}
 .pdesc{font-size:.85rem;color:rgba(255,255,255,.54);margin-bottom:36px;line-height:1.68;}
 .pcard-desc{font-size:.85rem;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:28px;padding-bottom:4px;}
+.pcard-price{display:flex;align-items:baseline;gap:4px;margin-bottom:8px;}
+.pcard-amt{font-family:'Fraunces',serif;font-size:4rem;color:var(--white);line-height:1;font-weight:700;}
+.pcard-per{font-size:.9rem;color:rgba(255,255,255,.6);font-weight:600;}
+.pcard-guarantee{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:14px;font-weight:600;}
 .pfeats{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:38px;text-align:left;}
 .pfeats li{display:flex;align-items:center;gap:12px;font-size:.9rem;color:rgba(255,255,255,.9);}
 .pchk{width:22px;height:22px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:var(--white);}
@@ -461,15 +465,54 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 <div class="auth-modal-overlay" id="authModal">
   <div class="auth-modal">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
-    <div style="text-align:center;margin-bottom:12px;"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:center top;"></div>
+    <div style="text-align:center;margin-bottom:12px;">
+      <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:center top;background:#dbeafe;">
+    </div>
     <h2>Welcome Back!</h2>
     <p>Log in to access your Homework Coach account</p>
-    <p style="font-size:.8rem;color:#0369a1;text-align:center;">Not subscribed yet? <a href="https://buy.stripe.com/28E7sLdp6djM0A42kTenS00" target="_blank" style="color:#0369a1;font-weight:700;">Subscribe here first →</a></p>
-    <input type="email" class="auth-input" id="authEmail" placeholder="Your email address" />
-    <input type="password" class="auth-input" id="authPassword" placeholder="Password (min 8 characters)" />
-    <button class="auth-submit" id="authSubmit" onclick="handleAuth()">Log In</button>
+    <p style="font-size:.8rem;color:#0369a1;text-align:center;margin-bottom:20px;">Not subscribed yet? <a href="https://buy.stripe.com/28E7sLdp6djM0A42kTenS00" target="_blank" style="color:#0369a1;font-weight:700;">Subscribe here first →</a></p>
+
+    <!-- Password login -->
+    <div id="passwordLoginSection">
+      <input type="email" class="auth-input" id="authEmail" placeholder="Your email address" />
+      <input type="password" class="auth-input" id="authPassword" placeholder="Password (min 8 characters)" />
+      <button class="auth-submit" id="authSubmit" onclick="handleAuth()">Log In</button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="showMagicLinkSection();return false;" style="font-size:.8rem;color:#0369a1;font-weight:600;">Forgot password? Send me a magic link →</a>
+      </div>
+    </div>
+
+    <!-- Magic link login -->
+    <div id="magicLinkSection" style="display:none;">
+      <p style="font-size:.85rem;color:#64748b;margin-bottom:14px;">Enter your email and we'll send a one-click login link.</p>
+      <input type="email" class="auth-input" id="magicEmail" placeholder="Your email address" />
+      <button class="auth-submit" id="magicSubmit" onclick="sendMagicLink()">Send Magic Link →</button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="showPasswordSection();return false;" style="font-size:.8rem;color:#0369a1;font-weight:600;">← Back to password login</a>
+      </div>
+    </div>
+
     <div class="auth-error" id="authError"></div>
     <div class="auth-success" id="authSuccess"></div>
+  </div>
+</div>
+
+<!-- POST-PAYMENT SUCCESS MODAL -->
+<div class="auth-modal-overlay" id="paymentSuccessModal" style="display:none;align-items:center;justify-content:center;">
+  <div class="auth-modal" style="text-align:center;">
+    <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
+    <h2 style="color:#059669;">Payment Successful!</h2>
+    <p>Welcome to The Homework Coach! Check your email for a magic link to log in and start using Ollie right away.</p>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px;margin:16px 0;text-align:left;">
+      <p style="font-size:.84rem;color:#065f46;font-weight:600;margin-bottom:8px;">✅ What happens next:</p>
+      <p style="font-size:.82rem;color:#065f46;line-height:1.8;">1. Check your inbox (and spam folder)<br>2. Click the magic link in the email<br>3. You'll be logged in automatically<br>4. Ollie is ready to help!</p>
+    </div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:10px;">Didn't get the email? Resend it:</p>
+    <input type="email" class="auth-input" id="resendEmail" placeholder="Your email address" />
+    <button class="auth-submit" onclick="resendMagicLink()" style="background:linear-gradient(135deg,#059669,#10b981);">Resend Magic Link</button>
+    <button onclick="document.getElementById('paymentSuccessModal').style.display='none'" style="margin-top:10px;background:none;border:none;color:#94a3b8;font-size:.82rem;cursor:pointer;display:block;width:100%;">Close</button>
+    <div class="auth-error" id="resendError" style="display:none;margin-top:8px;"></div>
+    <div class="auth-success" id="resendSuccess" style="display:none;margin-top:8px;"></div>
   </div>
 </div>
 
@@ -2268,27 +2311,24 @@ let freeMessageCount = parseInt(localStorage.getItem('hw_free_count') || '0');
 // DON'T show paywall on page load yet — wait for Supabase auth check first
 // The paywall will show AFTER we confirm user is not subscribed
 
-let authMode = 'signup';
+let authMode = 'login';
 
 // Initialize auth on page load
 async function initAuth() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentSuccess = urlParams.get('payment') === 'success';
+  if (paymentSuccess) window.history.replaceState({}, '', window.location.pathname);
+
   const { data: { session } } = await sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
-    const sessionToken = session.access_token.slice(-20);
-    const storedToken = localStorage.getItem('hw_session');
-    if (storedToken && storedToken !== sessionToken) {
-      await sbClient.auth.signOut();
-      currentUser = null;
-      if (freeMessageCount >= FREE_MESSAGE_LIMIT) showPaywall();
-      return;
-    }
-    localStorage.setItem('hw_session', sessionToken);
     await loadUserProfile();
     updateUserStatusBar();
+    if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
   } else {
-    // Not logged in — NOW check if free limit reached
-    if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+    if (paymentSuccess) {
+      document.getElementById('paymentSuccessModal').style.display = 'flex';
+    } else if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
       showPaywall();
     }
   }
@@ -2299,7 +2339,7 @@ async function loadUserProfile() {
   const { data } = await sbClient
     .from('profiles')
     .select('*')
-    .eq('email', currentUser.email)
+    .eq('id', currentUser.id)
     .single();
   if (data) {
     isSubscribed = data.is_subscribed;
@@ -2359,22 +2399,30 @@ function updateUserStatusBar() {
 
 function openAuthModal() {
   document.getElementById('authModal').classList.add('active');
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
 }
 
 function openLoginModal() {
-  document.getElementById('authModal').classList.add('active');
-  switchTab('login');
+  openAuthModal();
 }
 
 function closeAuthModal() {
   document.getElementById('authModal').classList.remove('active');
 }
 
-function switchTab(mode) {
-  authMode = mode;
-  document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
-  document.getElementById('loginTab').classList.toggle('active', mode === 'login');
-  document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Create Free Account' : 'Log In';
+function showMagicLinkSection() {
+  document.getElementById('passwordLoginSection').style.display = 'none';
+  document.getElementById('magicLinkSection').style.display = 'block';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+  const email = document.getElementById('authEmail').value.trim();
+  if (email) document.getElementById('magicEmail').value = email;
+}
+
+function showPasswordSection() {
+  document.getElementById('magicLinkSection').style.display = 'none';
+  document.getElementById('passwordLoginSection').style.display = 'block';
   document.getElementById('authError').style.display = 'none';
   document.getElementById('authSuccess').style.display = 'none';
 }
@@ -2404,7 +2452,7 @@ async function handleAuth() {
 
   const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
   if (error) {
-    errorEl.textContent = 'Invalid email or password. Please try again.';
+    errorEl.textContent = 'Invalid email or password. Try "Forgot password?" below.';
     errorEl.style.display = 'block';
   } else {
     currentUser = data.user;
@@ -2425,6 +2473,42 @@ async function handleAuth() {
   submitBtn.disabled = false;
 }
 
+async function sendMagicLink() {
+  const email = document.getElementById('magicEmail').value.trim();
+  const errorEl = document.getElementById('authError');
+  const successEl = document.getElementById('authSuccess');
+  const btn = document.getElementById('magicSubmit');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+  if (!email) { errorEl.textContent = 'Please enter your email address.'; errorEl.style.display = 'block'; return; }
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  const { error } = await sbClient.auth.signInWithOtp({
+    email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/?payment=success' }
+  });
+  if (error) {
+    errorEl.textContent = 'Could not send magic link. Please try again.'; errorEl.style.display = 'block';
+  } else {
+    successEl.textContent = '✅ Magic link sent! Check your email and click the link to log in.'; successEl.style.display = 'block';
+  }
+  btn.textContent = 'Send Magic Link →'; btn.disabled = false;
+}
+
+async function resendMagicLink() {
+  const email = document.getElementById('resendEmail').value.trim();
+  const errorEl = document.getElementById('resendError');
+  const successEl = document.getElementById('resendSuccess');
+  errorEl.style.display = 'none'; successEl.style.display = 'none';
+  if (!email) { errorEl.textContent = 'Please enter your email.'; errorEl.style.display = 'block'; return; }
+  const { error } = await sbClient.auth.signInWithOtp({
+    email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/?payment=success' }
+  });
+  if (error) {
+    errorEl.textContent = 'Could not send. Email support@thehomeworkcoach.org'; errorEl.style.display = 'block';
+  } else {
+    successEl.textContent = '✅ Magic link sent! Check your inbox.'; successEl.style.display = 'block';
+  }
+}
+
 async function handleLogout() {
   await sbClient.auth.signOut();
   currentUser = null;
@@ -2437,7 +2521,7 @@ async function saveMessageCount() {
   if (!currentUser) return;
   await sbClient.from('profiles')
     .update({ message_count: freeMessageCount })
-    .eq('email', currentUser.email);
+    .eq('id', currentUser.id);
 }
 
 function hidePaywall() {
