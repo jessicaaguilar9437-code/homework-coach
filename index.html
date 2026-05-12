@@ -1402,7 +1402,7 @@ REDIRECTING — use when the student is further off:
 - "We are not quite there yet — let us try one smaller step first."
 - "I can see your thinking, but something went slightly off. Let us find exactly where that happened."
 
-NEVER follow "not quite" with nothing — always add a specific clue or guiding question immediately after.
+NEVER follow a redirect with nothing — always add a specific clue or guiding question immediately after.
 NEVER say "Wrong" or "Incorrect" — this discourages children.
 
 STRUCTURE for wrong answer response — always 3 lines:
@@ -2307,7 +2307,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 
 // ── SUPABASE SETUP ──
 const SUPABASE_URL = 'https://gkuirwnlwpvkxsomcetq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_deeILBQTpjKgftDxKIGsUg_l6mBT8T6';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdWlyd25sd3B2a3hzb21jZXRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg4MzcsImV4cCI6MjA5MTc4NDgzN30.-9Ic7CG4Q2Aj4L-fccBMpV7Rh4efeL_G9RydZRXVsCs';
 const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E7sLdp6djM0A42kTenS00';
@@ -2433,7 +2433,7 @@ async function sendMagicLink() {
   btn.textContent = 'Sending...'; btn.disabled = true;
   const { error } = await sbClient.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/?payment=success' } });
   if (error) { errorEl.textContent = 'Could not send. Please try again.'; errorEl.style.display = 'block'; }
-  else { successEl.textContent = '✅ Magic link sent! Check your email to log in.'; successEl.style.display = 'block'; }
+  else { successEl.textContent = 'Magic link sent! Check your email to log in.'; successEl.style.display = 'block'; }
   btn.textContent = 'Send Magic Link →'; btn.disabled = false;
 }
 async function resendMagicLink() {
@@ -2444,7 +2444,7 @@ async function resendMagicLink() {
   if (!email) { errorEl.textContent = 'Please enter your email.'; errorEl.style.display = 'block'; return; }
   const { error } = await sbClient.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/?payment=success' } });
   if (error) { errorEl.textContent = 'Could not send. Email support@thehomeworkcoach.org'; errorEl.style.display = 'block'; }
-  else { successEl.textContent = '✅ Magic link sent! Check your inbox.'; successEl.style.display = 'block'; }
+  else { successEl.textContent = 'Magic link sent! Check your inbox.'; successEl.style.display = 'block'; }
 }
 
 async function handleAuth() {
