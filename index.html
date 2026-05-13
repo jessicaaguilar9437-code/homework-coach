@@ -902,6 +902,26 @@ footer{background:#0c2340;padding:56px 5% 32px;}
         <p style="font-size:.75rem;color:#64748b;margin-top:12px;">Already subscribed? <a href="#" onclick="openAuthModal();return false;" style="color:#0369a1;font-weight:700;">Log in here</a></p>
       </div>
     </div>
+    <!-- STARS & STREAK BAR -->
+    <div class="cb-stars-bar" id="starsBar">
+      <div class="cb-stars-left">
+        <span class="cb-stars-label">⭐ Stars:</span>
+        <div class="stars-display">
+          <span class="star" id="star1">⭐</span>
+          <span class="star" id="star2">⭐</span>
+          <span class="star" id="star3">⭐</span>
+          <span class="star" id="star4">⭐</span>
+          <span class="star" id="star5">⭐</span>
+        </div>
+        <span style="font-size:.75rem;font-weight:800;color:#92400e;margin-left:2px;" id="starCount">0</span>
+        <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;margin-left:10px;"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:.7rem;font-weight:700;color:#92400e;">Progress:</span>
+        <div class="cb-progress-bar"><div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:50px;transition:width .4s ease;"></div></div>
+        <span style="font-size:.7rem;font-weight:800;color:#92400e;" id="progressPct">0%</span>
+      </div>
+    </div>
     <div class="cb-msgs" id="cbMsgs">
       <div class="cmsg bot">
         <div class="cmsg-av">
@@ -1082,6 +1102,7 @@ function setGrade(btn, grade) {
 
   // Reset stars and progress
   starCount = 0;
+  streakCount = 0;
   progressCount = 0;
   for(let i = 1; i <= 5; i++) {
     const star = document.getElementById('star' + i);
@@ -1163,8 +1184,17 @@ function setSubject(btn, subj) {
     const welcomeMsg = document.getElementById('welcomeMsg');
     if(welcomeMsg) welcomeMsg.textContent = message;
   } else {
-    // Mid conversation — send a new bot message acknowledging the subject switch
-    appendMsg('bot', message);
+    // Mid conversation — only send subject switch message if subject actually changed
+    // Use a short acknowledgment instead of a question (Ollie already asked one)
+    const shortSwitch = {
+      'Math': `Switching to ${naturalGrade} Math! 📐 Go ahead with your math question.`,
+      'Reading & Literature': `Switching to ${naturalGrade} Reading! 📖 Go ahead with your question.`,
+      'Writing, Grammar & Spelling': `Switching to ${naturalGrade} Writing! ✍️ Go ahead with your question.`,
+      'Science': `Switching to ${naturalGrade} Science! 🔬 Go ahead with your question.`,
+      'Social Studies': `Switching to ${naturalGrade} Social Studies! 🌍 Go ahead with your question.`
+    };
+    const switchMsg = shortSwitch[subj] || `Switching to ${subj}! Go ahead with your question.`;
+    appendMsg('bot', switchMsg);
     const container = document.getElementById('cbMsgs');
     if(container) container.scrollTop = container.scrollHeight;
   }
@@ -1186,6 +1216,17 @@ function getSystemPrompt() {
   return `You are Ollie, an elite master academic tutor for students in ${gradeLevel}, specializing in ${currentSubject}.
 
 You hold the equivalent of a PhD in Education with 20 years of experience teaching at the highest level. You combine the Socratic method, cognitive science, and the precision of a licensed educator. Every response you give reflects outstanding academic knowledge and genuine care for the student's growth.
+
+🚨 THREE RULES THAT OVERRIDE EVERYTHING ELSE — READ FIRST:
+
+RULE A — NEVER STATE THE ANSWER:
+You must NEVER say the answer in your response — not even as a hint, not even as an example, not even as "it falls between X and Y." The student must always say the answer first. If you find yourself writing the answer, stop and ask a question instead.
+
+RULE B — VERIFY BEFORE CONFIRMING:
+Before saying "yes", "correct", "right", "exactly", or "perfect" — silently calculate the correct answer yourself first. If the student's answer does not match exactly, it is WRONG. Guide them. Never confirm a wrong answer under any circumstances. Not even if it is close.
+
+RULE C — 3 LINES MAXIMUM:
+Every response is 3 lines or fewer. No exceptions. If you cannot say it in 3 lines, cut it.
 
 ═══════════════════════════════
 CORE IDENTITY — NON-NEGOTIABLE
@@ -1373,11 +1414,21 @@ WHEN A STUDENT GIVES A WRONG ANSWER
 You are a warm, patient, expert children's tutor. When a child gets something wrong, they need to feel SAFE, supported, and encouraged to keep trying. Your tone must always feel like a kind, knowledgeable teacher who believes in them completely.
 
 NEVER say "Not quite" repeatedly — it sounds robotic and cold to a child.
-⚠️ CRITICAL ANSWER VALIDATION — NEVER SKIP:
-Before responding to ANY student answer, Ollie MUST silently verify the correct answer first.
-If the student answer does not exactly match the correct answer — it is wrong. No exceptions.
-Do NOT accept answers that are close or off by even one digit.
-Do NOT say "yes", "correct", "exactly", "right", or "perfect" unless the answer is 100% verified correct.
+⚠️ CRITICAL ANSWER VALIDATION — THIS IS THE MOST IMPORTANT RULE:
+Before responding to ANY student answer, Ollie MUST silently calculate the correct answer independently.
+Compare the student answer to the correct answer EXACTLY.
+If they do not match — the student is WRONG. Guide them. Never confirm it.
+Do NOT say "yes", "correct", "exactly", "right", "perfect", or "exactly right" unless mathematically verified.
+Do NOT accept approximate answers as correct for exact problems.
+Do NOT confirm "3" as the square root of 6 — √6 ≈ 2.449, not a whole number.
+Do NOT confirm any answer that is not precisely correct.
+
+NEVER REVEAL THE ANSWER DIRECTLY:
+NEVER state the answer in your response even as part of explaining.
+WRONG: "The square root of 6 is between 2 and 3" — this gives it away.
+WRONG: "Since 2×2=4 and 3×3=9, the square root of 6 is between 2 and 3" — still giving it away.
+RIGHT: "We know 2×2=4 and 3×3=9. Where does 6 fall between 4 and 9? So the square root must be between which two whole numbers?"
+The student must always state the answer. Ollie NEVER states it first.
 
 NEVER say "Wrong" or "Incorrect" — this discourages children.
 NEVER praise the wrong answer as correct — that confuses the child.
@@ -2198,6 +2249,12 @@ function appendMsg(role, text) {
   if(role === 'bot' && detectCorrectAnswer(text)) {
     bubble.classList.add('correct');
     setTimeout(() => awardStar(), 400);
+    setTimeout(() => triggerConfetti(), 600);
+  } else if(role === 'bot') {
+    // Wrong answer — reset streak
+    streakCount = 0;
+    const streakEl = document.getElementById('streakDisplay');
+    if (streakEl) streakEl.style.display = 'none';
   }
 
   // Show feedback button after every Ollie response
@@ -2275,30 +2332,43 @@ async function sendMsg() {
   sendBtn.disabled = true;
   showTyping();
 
-  try {
-    const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 320,
-        system: getSystemPrompt(),
-        messages: history
-      })
-    });
-
-    const data = await res.json();
-    removeTyping();
-    const reply = data?.content?.[0]?.text || "There was a brief technical issue. Please re-enter your question and The Homework Coach will be right with you.";
-    history.push({ role: 'assistant', content: reply });
-    appendMsg('bot', reply);
-
-  } catch (err) {
-    removeTyping();
-    appendMsg('bot', "It appears there was a connection issue. Please check your internet connection and try again.");
-    console.error(err);
+  let attempts = 0;
+  const maxAttempts = 3;
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 25000);
+      const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 320,
+          system: getSystemPrompt(),
+          messages: history
+        })
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+      removeTyping();
+      const reply = data?.content?.[0]?.text || null;
+      if (!reply) {
+        if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
+        appendMsg('bot', "Ollie is having a moment — please try sending your message again!");
+        break;
+      }
+      history.push({ role: 'assistant', content: reply });
+      appendMsg('bot', reply);
+      break;
+    } catch (err) {
+      clearTimeout && clearTimeout();
+      if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
+      removeTyping();
+      appendMsg('bot', "Ollie is having a moment — please try sending your message again!");
+      console.error(err);
+    }
   }
 
   sendBtn.disabled = false;
@@ -2607,17 +2677,35 @@ function showFeedback() {
   if(thanks) thanks.style.display = 'none';
 }
 let starCount = 0;
+let streakCount = 0;
 let progressCount = 0;
 const maxProgress = 10;
 
 function awardStar() {
   try {
-    if(starCount < 5) {
-      starCount++;
-      const star = document.getElementById('star' + starCount);
-      if(star) star.classList.add('earned');
-      const countEl = document.getElementById('starCount');
-      if(countEl) countEl.textContent = starCount;
+    starCount++;
+    streakCount++;
+    // Cycle stars — reset visual every 5 earned
+    const starIndex = ((starCount - 1) % 5) + 1;
+    if (starIndex === 1) {
+      for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star' + i);
+        if (s) s.classList.remove('earned');
+      }
+    }
+    const star = document.getElementById('star' + starIndex);
+    if(star) star.classList.add('earned');
+    const countEl = document.getElementById('starCount');
+    if(countEl) countEl.textContent = starCount;
+    // Show streak
+    const streakEl = document.getElementById('streakDisplay');
+    if (streakEl) {
+      if (streakCount >= 2) {
+        streakEl.textContent = '🔥 ' + streakCount + ' in a row!';
+        streakEl.style.display = 'inline';
+      } else {
+        streakEl.style.display = 'none';
+      }
     }
     updateProgress();
     launchConfetti();
@@ -2770,6 +2858,24 @@ async function submitContactForm() {
 }
 
 // Look for celebration keywords in Ollie's response to trigger rewards
+function triggerConfetti() {
+  const container = document.getElementById('confettiContainer');
+  if (!container) return;
+  container.style.display = 'block';
+  container.innerHTML = '';
+  const colors = ['#0369a1','#0ea5e9','#f59e0b','#10b981','#a78bfa','#f43f5e'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 1.5 + 's';
+    piece.style.animationDuration = (Math.random() * 1.5 + 2) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => { container.style.display = 'none'; container.innerHTML = ''; }, 4000);
+}
+
 // Only trigger confetti on FINAL answer celebrations (marked with 🎉)
 function detectCorrectAnswer(text) {
   // ONLY trigger confetti when Ollie uses the 🎉 emoji
