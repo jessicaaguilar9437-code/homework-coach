@@ -509,6 +509,21 @@ footer{background:#0c2340;padding:56px 5% 32px;}
   </div>
 </div>
 
+<!-- SET PASSWORD MODAL — shown after first magic link login -->
+<div class="auth-modal-overlay" id="setPasswordModal" style="display:none;align-items:center;justify-content:center;">
+  <div class="auth-modal" style="text-align:center;">
+    <div style="font-size:3rem;margin-bottom:12px;">🔐</div>
+    <h2 style="color:#0369a1;">Set Your Password</h2>
+    <p style="color:#64748b;font-size:.9rem;margin-bottom:20px;">Create a password so you can log in easily next time without needing a link.</p>
+    <input type="password" class="auth-input" id="newPassword" placeholder="Create a password (min 6 characters)" />
+    <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirm your password" />
+    <button class="auth-submit" onclick="setNewPassword()">Set Password & Continue →</button>
+    <button onclick="document.getElementById('setPasswordModal').style.display='none'" style="margin-top:10px;background:none;border:none;color:#94a3b8;font-size:.82rem;cursor:pointer;display:block;width:100%;">Skip for now</button>
+    <div class="auth-error" id="setPasswordError" style="display:none;margin-top:8px;"></div>
+    <div class="auth-success" id="setPasswordSuccess" style="display:none;margin-top:8px;"></div>
+  </div>
+</div>
+
 <!-- Clean Puzzle SVG — reusable -->
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="puzzle" viewBox="0 0 32 32" fill="none">
@@ -542,14 +557,22 @@ footer{background:#0c2340;padding:56px 5% 32px;}
   </ul>
 </nav>
 
-<!-- FLOATING TRY OLLIE BUTTON -->
-<a href="#tryit" class="floating-ollie-btn">
+<!-- FLOATING TRY OLLIE BUTTON — hidden when logged in -->
+<a href="#tryit" class="floating-ollie-btn" id="floatingOllieBtn">
   <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center top;">
   <span>Try Ollie</span>
 </a>
 
+<!-- LOGGED IN APP MODE BANNER -->
+<div id="loggedInBanner" style="display:none;background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:12px 24px;text-align:center;">
+  <p style="color:white;font-size:.9rem;margin:0;font-weight:600;">
+    🐾 Welcome back! You have full access to Ollie. 
+    <a href="#tryit" style="color:#bfdbfe;font-weight:800;margin-left:8px;">Go to Ollie →</a>
+  </p>
+</div>
+
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="heroSection">
   <div>
     <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Trusted Academic Support · 3rd through 9th grade</div>
     <h1>Structured Guidance That Turns Homework <span>Struggles Into Confidence</span></h1>
@@ -2413,6 +2436,7 @@ async function initAuth() {
     await loadUserProfile();
     updateUserStatusBar();
     if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
+    checkIfMagicLinkLogin();
   } else {
     if (paymentSuccess) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
@@ -2474,16 +2498,48 @@ function updateUserStatusBar() {
     if (isSubscribed) badge.style.display = 'inline';
     else badge.style.display = 'none';
 
-    // Nav — hide Login and Join, show user badge
+    // Nav — hide Login, Join, and Try Ollie Free; show user badge
     navLoginBtn.style.display = 'none';
     navJoinBtn.style.display = 'none';
     navUserBadge.style.display = 'flex';
     navUserEmail.textContent = currentUser.email;
+
+    // Hide Try Ollie Free nav link
+    const navTryOllie = document.querySelector('.nav-try-ollie');
+    if (navTryOllie) navTryOllie.parentElement.style.display = 'none';
+
+    // Hide floating button
+    const floatingBtn = document.getElementById('floatingOllieBtn');
+    if (floatingBtn) floatingBtn.style.display = 'none';
+
+    // Show logged in banner
+    const banner = document.getElementById('loggedInBanner');
+    if (banner) banner.style.display = 'block';
+
+    // If subscribed — scroll to chat automatically
+    if (isSubscribed) {
+      const chatSection = document.getElementById('tryit');
+      if (chatSection) {
+        setTimeout(() => {
+          chatSection.scrollIntoView({ behavior: 'smooth' });
+        }, 800);
+      }
+    }
   } else {
     bar.classList.add('hidden');
     navLoginBtn.style.display = '';
     navUserBadge.style.display = 'none';
     navJoinBtn.style.display = '';
+
+    // Show floating button and Try Ollie nav link
+    const floatingBtn = document.getElementById('floatingOllieBtn');
+    if (floatingBtn) floatingBtn.style.display = '';
+    const navTryOllie = document.querySelector('.nav-try-ollie');
+    if (navTryOllie) navTryOllie.parentElement.style.display = '';
+
+    // Hide logged in banner
+    const banner = document.getElementById('loggedInBanner');
+    if (banner) banner.style.display = 'none';
   }
 }
 
@@ -2584,7 +2640,53 @@ async function handleLogout() {
   currentUser = null;
   isSubscribed = false;
   freeMessageCount = 0;
+  localStorage.removeItem('hw_free_count');
   updateUserStatusBar();
+  // Reload page so marketing site shows again
+  window.location.reload();
+}
+
+async function setNewPassword() {
+  const password = document.getElementById('newPassword').value.trim();
+  const confirm = document.getElementById('confirmPassword').value.trim();
+  const errorEl = document.getElementById('setPasswordError');
+  const successEl = document.getElementById('setPasswordSuccess');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  if (!password || password.length < 6) {
+    errorEl.textContent = 'Password must be at least 6 characters.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (password !== confirm) {
+    errorEl.textContent = 'Passwords do not match. Please try again.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const { error } = await sbClient.auth.updateUser({ password });
+  if (error) {
+    errorEl.textContent = 'Could not set password. Please try again.';
+    errorEl.style.display = 'block';
+  } else {
+    successEl.textContent = '✅ Password set! You can now log in with email and password.';
+    successEl.style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('setPasswordModal').style.display = 'none';
+    }, 2000);
+  }
+}
+
+function checkIfMagicLinkLogin() {
+  // Detect if user just logged in via magic link (first time)
+  // Show set password modal so they can set a real password
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token') && hash.includes('type=magiclink')) {
+    setTimeout(() => {
+      document.getElementById('setPasswordModal').style.display = 'flex';
+    }, 1500);
+  }
 }
 
 async function saveMessageCount() {
