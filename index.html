@@ -577,6 +577,10 @@ footer{background:#0c2340;padding:56px 5% 32px;}
     <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Trusted Academic Support · 3rd through 9th grade</div>
     <h1>Structured Guidance That Turns Homework <span>Struggles Into Confidence</span></h1>
     <p class="hero-sub">The Homework Coach provides on-demand, step-by-step academic guidance that teaches your child how to think through assignments independently — without expensive tutors or instant-answer dependency.</p>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50px;padding:8px 18px;margin-bottom:8px;">
+      <span style="font-size:1rem;">🎯</span>
+      <span style="font-size:.82rem;font-weight:600;color:white;">New: Built-in Quiz Mode — Ollie reinforces learning after every session</span>
+    </div>
     <div class="hero-actions">
       <a href="#how" class="btn btn-primary">See How It Works →</a>
       <a href="https://buy.stripe.com/eVqaEX0Ck2F83Mg1gPenS02" target="_blank" class="btn btn-ghost">Join The Homework Coach</a>
@@ -664,6 +668,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
       <div class="demo-point"><div class="dp-icon sky">💬</div><div><h4>Questions Lead — Answers Never Follow</h4><p>Every response from The Homework Coach is a question or a structured hint. Your child is always the one reaching the conclusion — building genuine, lasting academic confidence.</p></div></div>
       <div class="demo-point"><div class="dp-icon green">📈</div><div><h4>Independent Thinking Develops Over Time</h4><p>With consistent use, students begin to approach new problems differently — breaking them into parts before asking for help. That independent skill is the true outcome of this program.</p></div></div>
       <div class="demo-point"><div class="dp-icon amber">🎯</div><div><h4>Calibrated to Your Child's Grade Level</h4><p>The Homework Coach adjusts its language, complexity, and academic expectations automatically based on the grade selected — ensuring every session is appropriately challenging and supportive.</p></div></div>
+<div class="demo-point"><div class="dp-icon" style="background:#fef3c7;">🎯</div><div><h4>Built-In Quiz Mode — Reinforce What They Learned</h4><p>After a homework session, students can activate Quiz Mode and Ollie will test them on exactly what they just covered — one question at a time, at their grade level. Real learning reinforcement, not just homework help.</p></div></div>
     </div>
   </div>
 </section>
@@ -706,6 +711,15 @@ footer{background:#0c2340;padding:56px 5% 32px;}
       <p>Guided exploration of history, geography, and civics — helping students understand how societies work, historical context, and government structure.</p>
       <span class="subj-tag" style="background:#fef3c7;color:#92400e;">U.S. History · World History · Geography · Civics</span>
     </div>
+
+    <!-- QUIZ MODE — 6th card, aligned next to Social Studies -->
+    <div class="subj-card" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fcd34d;">
+      <div class="subj-icon-wrap" style="background:#fde68a;">🎯</div>
+      <h3 style="color:#92400e;">Ollie Goes Beyond Homework Help</h3>
+      <p style="color:#78350f;">Once the student completes a session, they can activate Quiz Mode — and Ollie will assess their understanding through targeted questions calibrated to their exact grade level. Structured academic reinforcement that turns every homework session into a genuine learning milestone.</p>
+      <span class="subj-tag" style="background:#fde68a;color:#92400e;">Included with every subject</span>
+    </div>
+
   </div>
 </section>
 
@@ -897,6 +911,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
       <button class="sb" onclick="setSubject(this,'Writing, Grammar & Spelling');hideSpellingTip()">✍️ Writing</button>
       <button class="sb" onclick="setSubject(this,'Science');hideSpellingTip()">🔬 Science</button>
       <button class="sb" onclick="setSubject(this,'Social Studies');hideSpellingTip()">🌍 Social Studies</button>
+      <button class="sb quiz-me-btn" id="quizMeBtn" onclick="startQuizMode()" style="background:#fef3c7;border:1.5px solid #fcd34d;color:#92400e;font-weight:700;">🎯 Quiz Me!</button>
     </div>
 
     <!-- Spelling Helper Tip — shows only when Spelling is selected -->
@@ -1010,6 +1025,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
           <li><div class="pchk">✓</div>Unlimited guided homework sessions — 7 days a week</li>
           <li><div class="pchk">✓</div>All five core subjects — Math, Reading, Writing, Science & Social Studies</li>
           <li><div class="pchk">✓</div>3rd through 9th grade — automatically adjusts to your child</li>
+          <li><div class="pchk">✓</div>Quiz Mode — Ollie tests your child on what they just learned</li>
           <li><div class="pchk">✓</div>Built for ADHD learners — structured, patient, one step at a time</li>
           <li><div class="pchk">✓</div>Available 24/7 — including weekends and evenings</li>
           <li><div class="pchk">✓</div>No contracts — cancel anytime</li>
@@ -1250,6 +1266,18 @@ Before saying "yes", "correct", "right", "exactly", or "perfect" — silently ca
 
 RULE C — 3 LINES MAXIMUM:
 Every response is 3 lines or fewer. No exceptions. If you cannot say it in 3 lines, cut it.
+
+RULE D — QUIZ MODE:
+When the student activates Quiz Mode (by clicking Quiz Me or asking to be quizzed):
+- If a topic was already discussed in this session → quiz on THAT topic at ${gradeLevel} level
+- If no topic yet → say: "I would be happy to quiz you! What topic would you like me to test you on in ${currentSubject}?"
+- Ask ONE question at a time — never multiple questions at once
+- Wait for the student to answer before asking the next question
+- Guide wrong answers exactly as in tutoring mode — never give the answer directly
+- Celebrate correct answers with 🌟 for intermediate steps and 🎉 for final answers
+- After 5 questions say: "Excellent work! You completed a full quiz session. Would you like another round or do you have homework to work on?"
+- All quiz questions must be at exactly ${gradeLevel} academic level
+- Quiz questions must be clear, specific, and have ONE correct answer
 
 ═══════════════════════════════
 CORE IDENTITY — NON-NEGOTIABLE
@@ -2367,7 +2395,7 @@ async function sendMsg() {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6-20250514',
           max_tokens: 320,
           system: getSystemPrompt(),
           messages: history
@@ -2549,6 +2577,79 @@ function openAuthModal() {
 }
 function openLoginModal() { openAuthModal(); }
 function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
+let quizModeActive = false;
+
+function startQuizMode() {
+  // Check if grade and subject are selected
+  const grade = gradeLevel;
+  const subject = currentSubject;
+
+  quizModeActive = true;
+
+  // Show quiz mode indicator
+  const quizBtn = document.getElementById('quizMeBtn');
+  if (quizBtn) {
+    quizBtn.style.background = '#fbbf24';
+    quizBtn.textContent = '🎯 Quiz Active!';
+  }
+
+  // Build quiz prompt based on conversation context
+  let quizPrompt = '';
+  if (history.length > 2) {
+    // Already in a conversation — quiz on what was discussed
+    quizPrompt = `[QUIZ MODE ACTIVATED] The student wants to be quizzed on what we just covered. Start the quiz immediately — ask your first question based on the topics we discussed in this session. Grade level: ${grade}. Subject: ${subject}. Ask ONE question only and wait for the answer.`;
+  } else {
+    // No conversation yet — ask what topic
+    quizPrompt = `[QUIZ MODE ACTIVATED] The student wants to be quizzed but we have not covered any topic yet. Ask them what specific topic they would like to be quizzed on in ${subject} at ${grade} level.`;
+  }
+
+  // Send quiz activation message
+  history.push({ role: 'user', content: quizPrompt });
+  sendMsgToOllie();
+}
+
+async function sendMsgToOllie() {
+  // Show typing indicator
+  const typingId = showTyping();
+  
+  let attempts = 0;
+  const maxAttempts = 3;
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 25000);
+      const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6-20250514',
+          max_tokens: 320,
+          system: getSystemPrompt(),
+          messages: history
+        })
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+      removeTyping();
+      const reply = data?.content?.[0]?.text || null;
+      if (!reply) {
+        if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
+        appendMsg('bot', "Ollie is having a moment — please try sending your message again!");
+        break;
+      }
+      history.push({ role: 'assistant', content: reply });
+      appendMsg('bot', reply);
+      break;
+    } catch (err) {
+      if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
+      removeTyping();
+      appendMsg('bot', "Ollie is having a moment — please try sending your message again!");
+    }
+  }
+}
+
 function showMagicLinkSection() {
   document.getElementById('passwordLoginSection').style.display = 'none';
   document.getElementById('magicLinkSection').style.display = 'block';
