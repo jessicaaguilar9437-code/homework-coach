@@ -431,6 +431,20 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 .fsoc{width:34px;height:34px;background:rgba(255,255,255,.07);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;text-decoration:none;transition:background .2s;}
 .fsoc:hover{background:rgba(255,255,255,.15);}
 @media(max-width:900px){.footer-top{grid-template-columns:1fr;gap:32px;}}
+
+/* LOGGED IN APP MODE — hide all marketing sections */
+body.logged-in .marketing-section { display: none !important; }
+body.logged-in .floating-ollie-btn { display: none !important; }
+body.logged-in #loggedInBanner { display: block !important; }
+
+/* App mode nav */
+body.logged-in .nav-try-ollie { display: none !important; }
+
+/* Chat section always full height in app mode */
+body.logged-in #tryit { 
+  min-height: 100vh; 
+  padding-top: 20px;
+}
 </style>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -518,7 +532,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
     <input type="password" class="auth-input" id="newPassword" placeholder="Create a password (min 6 characters)" />
     <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirm your password" />
     <button class="auth-submit" onclick="setNewPassword()">Set Password & Continue →</button>
-    <button onclick="document.getElementById('setPasswordModal').style.display='none'" style="margin-top:10px;background:none;border:none;color:#94a3b8;font-size:.82rem;cursor:pointer;display:block;width:100%;">Skip for now</button>
+
     <div class="auth-error" id="setPasswordError" style="display:none;margin-top:8px;"></div>
     <div class="auth-success" id="setPasswordSuccess" style="display:none;margin-top:8px;"></div>
   </div>
@@ -572,7 +586,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </div>
 
 <!-- HERO -->
-<section class="hero" id="heroSection">
+<section class="hero marketing-section" id="heroSection">
   <div>
     <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Trusted Academic Support · 3rd through 9th grade</div>
     <h1>Structured Guidance That Turns Homework <span>Struggles Into Confidence</span></h1>
@@ -613,7 +627,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="how-sec" id="how">
+<section class="marketing-section" class="how-sec" id="how">
   <div class="s-head">
     <div class="s-label">The Coaching Method</div>
     <div class="s-title">A Structured Four-Step Academic Process</div>
@@ -644,7 +658,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- DEMO -->
-<section class="demo-sec">
+<section class="marketing-section" class="demo-sec">
   <div class="s-head">
     <div class="s-label">See It In Action</div>
     <div class="s-title">Guidance That Builds Real Academic Skill</div>
@@ -674,7 +688,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- SUBJECTS -->
-<section class="subjects-sec" id="subjects">
+<section class="marketing-section" class="subjects-sec" id="subjects">
   <div class="s-head">
     <div class="s-label">Core Academic Areas</div>
     <div class="s-title">Five Subjects. One Structured Approach.</div>
@@ -725,7 +739,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 
 <!-- WHO IT'S FOR -->
 <!-- ADHD SECTION -->
-<section style="background:linear-gradient(145deg,#0369a1 0%,#0ea5e9 100%);padding:96px 5%;position:relative;overflow:hidden;">
+<section class="marketing-section" style="background:linear-gradient(145deg,#0369a1 0%,#0ea5e9 100%);padding:96px 5%;position:relative;overflow:hidden;">
   <div style="position:absolute;top:-150px;right:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);pointer-events:none;"></div>
   <div style="max-width:900px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:56px;">
@@ -786,7 +800,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- COMPARE -->
-<section class="compare-sec" id="compare">
+<section class="marketing-section" class="compare-sec" id="compare">
   <div class="s-head">
     <div class="s-label">Why Families Choose Us</div>
     <div class="s-title">Structured Guidance. Complete Safety. Real Results.</div>
@@ -840,7 +854,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- TESTIMONIALS -->
-<section class="testi-sec">
+<section class="marketing-section" class="testi-sec">
   <div class="s-head text-center" style="max-width:560px;margin:0 auto 56px;">
     <div class="s-label">Parent Experiences</div>
     <div class="s-title">Families Who Made the Change</div>
@@ -999,7 +1013,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 </section>
 
 <!-- FAQ -->
-<section class="faq-sec">
+<section class="marketing-section" class="faq-sec">
   <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
     
     <!-- FAQ Column -->
@@ -1040,7 +1054,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
 
 <!-- FOOTER -->
 <!-- CONTACT / FEEDBACK SECTION -->
-<section style="background:#f0f9ff;padding:72px 5%;">
+<section class="marketing-section" style="background:#f0f9ff;padding:72px 5%;">
   <div style="max-width:640px;margin:0 auto;text-align:center;">
     <div style="display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#0369a1;background:#dbeafe;border-radius:50px;padding:5px 14px;margin-bottom:16px;">Contact & Support</div>
     <h2 style="font-family:'Fraunces',serif;font-size:clamp(1.6rem,2.5vw,2.2rem);color:#0c2340;margin-bottom:12px;">We're Here to Help</h2>
@@ -1084,7 +1098,7 @@ footer{background:#0c2340;padding:56px 5% 32px;}
   </div>
 </section>
 
-<footer>
+<footer class="marketing-section">
   <div class="footer-top">
     <div>
       <a class="footer-logo" href="#">
@@ -2562,14 +2576,15 @@ function updateUserStatusBar() {
     const banner = document.getElementById('loggedInBanner');
     if (banner) banner.style.display = 'block';
 
-    // If subscribed — scroll to chat automatically
-    if (isSubscribed) {
-      const chatSection = document.getElementById('tryit');
-      if (chatSection) {
-        setTimeout(() => {
-          chatSection.scrollIntoView({ behavior: 'smooth' });
-        }, 800);
-      }
+    // App mode — hide all marketing, show only chat
+    document.body.classList.add('logged-in');
+    
+    // Scroll to chat
+    const chatSection = document.getElementById('tryit');
+    if (chatSection) {
+      setTimeout(() => {
+        chatSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
     }
   } else {
     bar.classList.add('hidden');
@@ -2586,6 +2601,9 @@ function updateUserStatusBar() {
     // Hide logged in banner
     const banner = document.getElementById('loggedInBanner');
     if (banner) banner.style.display = 'none';
+    
+    // Remove app mode — show marketing site
+    document.body.classList.remove('logged-in');
   }
 }
 
