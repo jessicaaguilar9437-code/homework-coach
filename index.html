@@ -2458,13 +2458,31 @@ async function initAuth() {
   const paymentSuccess = urlParams.get('payment') === 'success';
   if (paymentSuccess) window.history.replaceState({}, '', window.location.pathname);
 
+  // Check hash BEFORE Supabase clears it
+  const hash = window.location.hash;
+  const hashParams = new URLSearchParams(hash.replace('#', ''));
+  const linkType = hashParams.get('type');
+  const hasAuthToken = hash && hash.includes('access_token');
+  const needsPassword = hasAuthToken && (
+    linkType === 'invite' || 
+    linkType === 'recovery' || 
+    linkType === 'magiclink' ||
+    linkType === 'signup'
+  );
+
   const { data: { session } } = await sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
     await loadUserProfile();
     updateUserStatusBar();
     if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
-    checkIfMagicLinkLogin();
+    // Show set password modal for invite and recovery links
+    if (needsPassword) {
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => {
+        document.getElementById('setPasswordModal').style.display = 'flex';
+      }, 800);
+    }
   } else {
     if (paymentSuccess) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
@@ -2780,30 +2798,44 @@ async function setNewPassword() {
 }
 
 function checkIfMagicLinkLogin() {
-  // Detect if user logged in via magic link OR invite link
-  // Show set password modal so they can set a permanent password
+  // Check URL hash for any Supabase auth token
   const hash = window.location.hash;
-  const params = new URLSearchParams(window.location.search);
   
-  // Check for any type of magic/invite link
-  const isMagicOrInvite = hash && hash.includes('access_token') && (
-    hash.includes('type=magiclink') || 
-    hash.includes('type=invite') ||
-    hash.includes('type=recovery') ||
-    hash.includes('type=signup')
-  );
-
-  // Also check if user has no password set (new invite user)
-  const isNewUser = params.get('type') === 'invite' || params.get('type') === 'magiclink';
-
-  if (isMagicOrInvite || isNewUser) {
-    // Clean URL
-    window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => {
-      document.getElementById('setPasswordModal').style.display = 'flex';
-    }, 1000);
+  // Supabase puts access_token in hash for all magic/invite/recovery links
+  if (hash && hash.includes('access_token')) {
+    // Parse the hash to get the type
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+    const type = hashParams.get('type');
+    
+    // Show set password modal for invite, recovery, magiclink types
+    if (type === 'invite' || type === 'recovery' || type === 'magiclink' || type === 'signup') {
+      // Clean URL first
+      window.history.replaceState({}, '', window.location.pathname);
+      // Show modal after short delay to let auth complete
+      setTimeout(() => {
+        document.getElementById('setPasswordModal').style.display = 'flex';
+      }, 800);
+    }
   }
 }
+
+// Listen for Supabase auth state changes to catch password recovery
+sbClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    setTimeout(() => {
+      document.getElementById('setPasswordModal').style.display = 'flex';
+    }, 500);
+  }
+  if (event === 'SIGNED_IN' && session) {
+    // Check if this is a fresh invite/magic link login
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=invite')) {
+      setTimeout(() => {
+        document.getElementById('setPasswordModal').style.display = 'flex';
+      }, 800);
+    }
+  }
+});
 
 async function saveMessageCount() {
   if (!currentUser) return;
