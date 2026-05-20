@@ -2780,13 +2780,28 @@ async function setNewPassword() {
 }
 
 function checkIfMagicLinkLogin() {
-  // Detect if user just logged in via magic link (first time)
-  // Show set password modal so they can set a real password
+  // Detect if user logged in via magic link OR invite link
+  // Show set password modal so they can set a permanent password
   const hash = window.location.hash;
-  if (hash && hash.includes('access_token') && hash.includes('type=magiclink')) {
+  const params = new URLSearchParams(window.location.search);
+  
+  // Check for any type of magic/invite link
+  const isMagicOrInvite = hash && hash.includes('access_token') && (
+    hash.includes('type=magiclink') || 
+    hash.includes('type=invite') ||
+    hash.includes('type=recovery') ||
+    hash.includes('type=signup')
+  );
+
+  // Also check if user has no password set (new invite user)
+  const isNewUser = params.get('type') === 'invite' || params.get('type') === 'magiclink';
+
+  if (isMagicOrInvite || isNewUser) {
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
     setTimeout(() => {
       document.getElementById('setPasswordModal').style.display = 'flex';
-    }, 1500);
+    }, 1000);
   }
 }
 
