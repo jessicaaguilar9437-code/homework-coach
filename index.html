@@ -627,7 +627,7 @@ body.logged-in #tryit {
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="marketing-section" class="how-sec" id="how">
+<section class="marketing-section how-sec" id="how">
   <div class="s-head">
     <div class="s-label">The Coaching Method</div>
     <div class="s-title">A Structured Four-Step Academic Process</div>
@@ -658,7 +658,7 @@ body.logged-in #tryit {
 </section>
 
 <!-- DEMO -->
-<section class="marketing-section" class="demo-sec">
+<section class="marketing-section demo-sec">
   <div class="s-head">
     <div class="s-label">See It In Action</div>
     <div class="s-title">Guidance That Builds Real Academic Skill</div>
@@ -800,7 +800,7 @@ body.logged-in #tryit {
 </section>
 
 <!-- COMPARE -->
-<section class="marketing-section" class="compare-sec" id="compare">
+<section class="marketing-section compare-sec" id="compare">
   <div class="s-head">
     <div class="s-label">Why Families Choose Us</div>
     <div class="s-title">Structured Guidance. Complete Safety. Real Results.</div>
@@ -854,7 +854,7 @@ body.logged-in #tryit {
 </section>
 
 <!-- TESTIMONIALS -->
-<section class="marketing-section" class="testi-sec">
+<section class="marketing-section testi-sec">
   <div class="s-head text-center" style="max-width:560px;margin:0 auto 56px;">
     <div class="s-label">Parent Experiences</div>
     <div class="s-title">Families Who Made the Change</div>
@@ -1013,7 +1013,7 @@ body.logged-in #tryit {
 </section>
 
 <!-- FAQ -->
-<section class="marketing-section" class="faq-sec">
+<section class="marketing-section faq-sec">
   <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
     
     <!-- FAQ Column -->
@@ -2409,7 +2409,7 @@ async function sendMsg() {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 320,
           system: getSystemPrompt(),
           messages: history
@@ -2668,7 +2668,7 @@ async function sendMsgToOllie() {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 320,
           system: getSystemPrompt(),
           messages: history
