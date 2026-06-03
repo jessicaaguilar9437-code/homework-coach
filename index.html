@@ -330,6 +330,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .cmsg-av img{width:100%;height:100%;object-fit:cover;object-position:center 15%;border-radius:50%;}
 .cmsg.user .cmsg-av{background:#0369a1;border-color:#0369a1;}
 .cbubble{max-width:80%;padding:11px 15px;border-radius:17px;font-size:.86rem;line-height:1.57;}
+.voice-btn{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.5;margin-left:6px;padding:2px 4px;border-radius:4px;transition:opacity .2s;vertical-align:middle;}
+.voice-btn:hover{opacity:1;background:#eff6ff;}
+.voice-btn.playing{opacity:1;}
 .cmsg.bot .cbubble{background:#f0f9ff;color:#0369a1;border-bottom-left-radius:4px;}
 .cmsg.user .cbubble{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:var(--white);border-bottom-right-radius:4px;}
 .cb-typing-wrap{display:flex;align-items:flex-end;gap:8px;}
@@ -1426,13 +1429,22 @@ WRONG: [Wrong twice] "Let me ask it another way — what do you think the answer
 RIGHT: [Wrong twice] "Let me show you. 3×3=9, 4×4=16, 5×5=25. So the square root of 25 is 5. Now — what is the square root of 9?"
 
 ═══════════════════════════════
-EMOJI AND CELEBRATION RULES
+EMOJI AND CELEBRATION RULES — CRITICAL FOR CONFETTI
 ═══════════════════════════════
-- 🌟 for correct intermediate steps only
-- 🎉 ONLY when student states the complete final answer correctly
-- No emoji for grades 7-9
+STRICT EMOJI RULES — follow exactly:
+- 🌟 = use ONLY for correct intermediate steps (not the final answer)
+- 🎉 = use ONLY when the student states the COMPLETE FINAL ANSWER correctly — this triggers confetti for the child
+- You MUST use 🎉 when the student gives the final correct answer — never use 🌟 for final answers
+- No emoji at all for grades 7-9
 - Never use: ✨ 💡 🔥 or any other emoji
-- Celebration must NAME what they did right — not just "great job"
+- Celebration must NAME exactly what they got right — never just "great job"
+
+EXAMPLE — student solves 6×8=48 as final answer:
+WRONG: "Yes! 6×8=48! 🌟" — never use 🌟 for final answers
+RIGHT: "Yes! Exactly right — 6×8=48! 🎉 You worked through that perfectly!"
+
+EXAMPLE — student gets intermediate step correct:
+RIGHT: "Exactly — 6×4=24! 🌟 Now what is 24+24?"
 
 ═══════════════════════════════
 GOLDEN RULE — ALWAYS LOOP BACK
@@ -2310,6 +2322,16 @@ function appendMsg(role, text) {
     .replace(/\n/g, '<br>');
   bubble.innerHTML = formatted;
 
+  // Add voice button for bot messages
+  if (role === 'bot') {
+    const voiceBtn = document.createElement('button');
+    voiceBtn.className = 'voice-btn';
+    voiceBtn.innerHTML = '🔊';
+    voiceBtn.title = 'Listen to Ollie';
+    voiceBtn.onclick = () => speakText(text, voiceBtn);
+    bubble.appendChild(voiceBtn);
+  }
+
   // Detect correct answer and trigger reward
   if(role === 'bot' && detectCorrectAnswer(text)) {
     bubble.classList.add('correct');
@@ -2373,7 +2395,7 @@ async function sendMsg() {
     } else {
       freeMessageCount++;
       localStorage.setItem('hw_free_count', freeMessageCount.toString());
-      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+      if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
         showPaywall();
         return;
       }
@@ -2382,7 +2404,7 @@ async function sendMsg() {
     // Not logged in — apply free limit
     freeMessageCount++;
     localStorage.setItem('hw_free_count', freeMessageCount.toString());
-    if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+    if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
     }
@@ -2778,6 +2800,52 @@ async function handleAuth() {
 
   submitBtn.textContent = 'Log In';
   submitBtn.disabled = false;
+}
+
+// Text to Speech via OpenAI TTS
+let currentAudio = null;
+
+async function speakText(text, btn) {
+  // Stop any currently playing audio
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('playing'));
+    if (btn.classList.contains('was-playing')) {
+      btn.classList.remove('was-playing');
+      return;
+    }
+  }
+
+  btn.classList.add('playing');
+  btn.classList.add('was-playing');
+  btn.innerHTML = '⏸';
+
+  try {
+    const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text })
+    });
+
+    if (!res.ok) throw new Error('TTS failed');
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.play();
+    currentAudio.onended = () => {
+      btn.classList.remove('playing');
+      btn.classList.remove('was-playing');
+      btn.innerHTML = '🔊';
+      currentAudio = null;
+    };
+  } catch (err) {
+    console.error('TTS error:', err);
+    btn.classList.remove('playing');
+    btn.classList.remove('was-playing');
+    btn.innerHTML = '🔊';
+  }
 }
 
 async function handleLogout() {
