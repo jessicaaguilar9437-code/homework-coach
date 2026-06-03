@@ -2409,10 +2409,10 @@ async function sendMsg() {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 320,
           system: getSystemPrompt(),
-          messages: history
+          messages: history,
+          grade: gradeLevel,
+          subject: currentSubject
         })
       });
       clearTimeout(timeout);
@@ -2668,10 +2668,10 @@ async function sendMsgToOllie() {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 320,
           system: getSystemPrompt(),
-          messages: history
+          messages: history,
+          grade: gradeLevel,
+          subject: currentSubject
         })
       });
       clearTimeout(timeout);
