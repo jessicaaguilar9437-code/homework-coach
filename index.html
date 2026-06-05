@@ -2992,13 +2992,26 @@ async function speakText(text, btn) {
   btn.innerHTML = '⏸';
 
   try {
+    // Make sure text is not empty
+    const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
+    if (!cleanText) {
+      btn.classList.remove('playing');
+      btn.classList.remove('was-playing');
+      btn.innerHTML = '🔊';
+      return;
+    }
+
     const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text })
+      body: JSON.stringify({ text: cleanText })
     });
 
-    if (!res.ok) throw new Error('TTS failed');
+    if (!res.ok) {
+      const errData = await res.json();
+      console.error('TTS error:', errData);
+      throw new Error('TTS failed');
+    }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
