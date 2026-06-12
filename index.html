@@ -3006,62 +3006,81 @@ async function handleAuth() {
   submitBtn.disabled = false;
 }
 
-// Text to Speech via OpenAI TTS
+// Text to Speech — warm, friendly, energetic female voice for grades 3–9
 let currentAudio = null;
+let currentUtterance = null;
 
-async function speakText(text, btn) {
-  // Stop any currently playing audio
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('playing'));
+function pickOllieVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  // Priority list — warm, friendly female voices across Mac/Chrome/Windows
+  return voices.find(v => v.name === 'Samantha')
+    || voices.find(v => v.name === 'Google US English Female')
+    || voices.find(v => v.name === 'Karen')
+    || voices.find(v => v.name === 'Victoria')
+    || voices.find(v => v.name === 'Microsoft Zira - English (United States)')
+    || voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
+    || voices.find(v => v.lang === 'en-US' && /female|woman|girl/i.test(v.name))
+    || voices.find(v => v.lang === 'en-US')
+    || voices.find(v => v.lang.startsWith('en'))
+    || null;
+}
+
+function speakText(text, btn) {
+  // Stop anything currently playing
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    window.speechSynthesis.cancel();
+    document.querySelectorAll('.voice-btn').forEach(b => {
+      b.classList.remove('playing', 'was-playing');
+      b.innerHTML = '🔊';
+    });
     if (btn.classList.contains('was-playing')) {
       btn.classList.remove('was-playing');
       return;
     }
   }
 
-  btn.classList.add('playing');
-  btn.classList.add('was-playing');
+  // Strip HTML, emoji, and markdown so Ollie sounds natural
+  const cleanText = (text || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/[\u{1F300}-\u{1FAFF}]|[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[★✓✗●◆►·]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanText) return;
+
+  btn.classList.add('playing', 'was-playing');
   btn.innerHTML = '⏸';
 
-  try {
-    // Make sure text is not empty
-    const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
-    if (!cleanText) {
-      btn.classList.remove('playing');
-      btn.classList.remove('was-playing');
-      btn.innerHTML = '🔊';
-      return;
-    }
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  // Warm · friendly · energetic · happy — tuned for kids grades 3–9
+  utterance.rate   = 1.1;    // upbeat pace — energetic, not rushed
+  utterance.pitch  = 1.5;    // higher pitch = young, warm, happy feel
+  utterance.volume = 1;
 
-    const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tts: true, text: cleanText })
-    });
+  const voice = pickOllieVoice();
+  if (voice) utterance.voice = voice;
 
-    if (!res.ok) {
-      const errData = await res.json();
-      console.error('TTS error:', errData);
-      throw new Error('TTS failed');
-    }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    currentAudio = new Audio(url);
-    currentAudio.play();
-    currentAudio.onended = () => {
-      btn.classList.remove('playing');
-      btn.classList.remove('was-playing');
-      btn.innerHTML = '🔊';
-      currentAudio = null;
-    };
-  } catch (err) {
-    console.error('TTS error:', err);
-    btn.classList.remove('playing');
-    btn.classList.remove('was-playing');
+  utterance.onend = () => {
+    btn.classList.remove('playing', 'was-playing');
     btn.innerHTML = '🔊';
+  };
+  utterance.onerror = () => {
+    btn.classList.remove('playing', 'was-playing');
+    btn.innerHTML = '🔊';
+  };
+
+  // Some browsers load voices async on first call — wait and retry once
+  if (!voice && window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      const v = pickOllieVoice();
+      if (v) utterance.voice = v;
+      window.speechSynthesis.onvoiceschanged = null;
+      window.speechSynthesis.speak(utterance);
+    };
+  } else {
+    window.speechSynthesis.speak(utterance);
   }
 }
 
