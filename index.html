@@ -3006,27 +3006,27 @@ async function handleAuth() {
   submitBtn.disabled = false;
 }
 
-// Text to Speech — warm, friendly, energetic female voice for grades 3–9
+// Text to Speech — natural warm female voice for grades 3–9
 let currentAudio = null;
 let currentUtterance = null;
 
 function pickOllieVoice() {
   const voices = window.speechSynthesis.getVoices();
-  // Priority list — warm, friendly female voices across Mac/Chrome/Windows
-  return voices.find(v => v.name === 'Samantha')
+  return voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
+    || voices.find(v => v.name === 'Ava (Enhanced)')
+    || voices.find(v => v.name === 'Samantha (Enhanced)')
+    || voices.find(v => v.name === 'Allison (Enhanced)')
+    || voices.find(v => v.name === 'Susan (Enhanced)')
     || voices.find(v => v.name === 'Google US English Female')
+    || voices.find(v => v.name === 'Samantha')
     || voices.find(v => v.name === 'Karen')
-    || voices.find(v => v.name === 'Victoria')
-    || voices.find(v => v.name === 'Microsoft Zira - English (United States)')
-    || voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
-    || voices.find(v => v.lang === 'en-US' && /female|woman|girl/i.test(v.name))
+    || voices.find(v => v.lang === 'en-US' && v.localService === false)
     || voices.find(v => v.lang === 'en-US')
     || voices.find(v => v.lang.startsWith('en'))
     || null;
 }
 
 function speakText(text, btn) {
-  // Stop anything currently playing
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
     window.speechSynthesis.cancel();
     document.querySelectorAll('.voice-btn').forEach(b => {
@@ -3039,7 +3039,6 @@ function speakText(text, btn) {
     }
   }
 
-  // Strip HTML, emoji, and markdown so Ollie sounds natural
   const cleanText = (text || '')
     .replace(/<[^>]*>/g, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -3054,9 +3053,8 @@ function speakText(text, btn) {
   btn.innerHTML = '⏸';
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  // Warm · friendly · energetic · happy — tuned for kids grades 3–9
-  utterance.rate   = 1.1;    // upbeat pace — energetic, not rushed
-  utterance.pitch  = 1.5;    // higher pitch = young, warm, happy feel
+  utterance.rate   = 1.05;  // natural pace, slightly upbeat
+  utterance.pitch  = 1.05;  // very close to natural — warm without sounding robotic
   utterance.volume = 1;
 
   const voice = pickOllieVoice();
@@ -3071,7 +3069,6 @@ function speakText(text, btn) {
     btn.innerHTML = '🔊';
   };
 
-  // Some browsers load voices async on first call — wait and retry once
   if (!voice && window.speechSynthesis.getVoices().length === 0) {
     window.speechSynthesis.onvoiceschanged = () => {
       const v = pickOllieVoice();
