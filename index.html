@@ -3010,25 +3010,13 @@ async function handleAuth() {
 let currentAudio = null;
 let currentUtterance = null;
 
-function pickOllieVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  return voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
-    || voices.find(v => v.name === 'Ava (Enhanced)')
-    || voices.find(v => v.name === 'Samantha (Enhanced)')
-    || voices.find(v => v.name === 'Allison (Enhanced)')
-    || voices.find(v => v.name === 'Susan (Enhanced)')
-    || voices.find(v => v.name === 'Google US English Female')
-    || voices.find(v => v.name === 'Samantha')
-    || voices.find(v => v.name === 'Karen')
-    || voices.find(v => v.lang === 'en-US' && v.localService === false)
-    || voices.find(v => v.lang === 'en-US')
-    || voices.find(v => v.lang.startsWith('en'))
-    || null;
-}
+let _currentAudio = null;
 
-function speakText(text, btn) {
-  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-    window.speechSynthesis.cancel();
+async function speakText(text, btn) {
+  // Stop anything currently playing
+  if (_currentAudio) {
+    _currentAudio.pause();
+    _currentAudio = null;
     document.querySelectorAll('.voice-btn').forEach(b => {
       b.classList.remove('playing', 'was-playing');
       b.innerHTML = '🔊';
@@ -3037,6 +3025,9 @@ function speakText(text, btn) {
       btn.classList.remove('was-playing');
       return;
     }
+  }
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    window.speechSynthesis.cancel();
   }
 
   const cleanText = (text || '')
@@ -3052,33 +3043,43 @@ function speakText(text, btn) {
   btn.classList.add('playing', 'was-playing');
   btn.innerHTML = '⏸';
 
+  // Use Aria Neural via Render server
+  try {
+    const res = await fetch(
+      'https://ollie-voice-server.onrender.com/tts?text=' + encodeURIComponent(cleanText)
+    );
+    if (res.ok) {
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      _currentAudio = audio;
+      const done = () => {
+        btn.classList.remove('playing', 'was-playing');
+        btn.innerHTML = '🔊';
+        URL.revokeObjectURL(url);
+        _currentAudio = null;
+      };
+      audio.onended = done;
+      audio.onerror = done;
+      audio.play();
+      return;
+    }
+  } catch (_) {}
+
+  // Fallback: browser voice
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
+    || voices.find(v => v.name === 'Samantha')
+    || voices.find(v => v.lang === 'en-US')
+    || null;
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.rate   = 1.05;  // natural pace, slightly upbeat
-  utterance.pitch  = 1.05;  // very close to natural — warm without sounding robotic
+  utterance.rate = 1.05;
   utterance.volume = 1;
-
-  const voice = pickOllieVoice();
   if (voice) utterance.voice = voice;
-
-  utterance.onend = () => {
-    btn.classList.remove('playing', 'was-playing');
-    btn.innerHTML = '🔊';
-  };
-  utterance.onerror = () => {
-    btn.classList.remove('playing', 'was-playing');
-    btn.innerHTML = '🔊';
-  };
-
-  if (!voice && window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      const v = pickOllieVoice();
-      if (v) utterance.voice = v;
-      window.speechSynthesis.onvoiceschanged = null;
-      window.speechSynthesis.speak(utterance);
-    };
-  } else {
-    window.speechSynthesis.speak(utterance);
-  }
+  const done = () => { btn.classList.remove('playing', 'was-playing'); btn.innerHTML = '🔊'; };
+  utterance.onend = done;
+  utterance.onerror = done;
+  window.speechSynthesis.speak(utterance);
 }
 
 async function handleLogout() {
