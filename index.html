@@ -343,6 +343,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .csugg{background:var(--white);border:1.5px solid rgba(3,105,161,.16);border-radius:14px;padding:5px 13px;font-size:.74rem;font-weight:700;color:#0369a1;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .csugg:hover{background:#e0f2fe;border-color:#0ea5e9;}
 .cb-input-row{padding:12px 16px;background:var(--white);border-top:1.5px solid var(--sky);display:flex;gap:10px;align-items:flex-end;}
+.cb-mic{width:42px;height:42px;background:linear-gradient(135deg,#059669,#10b981);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:18px;transition:all .2s;box-shadow:0 2px 12px rgba(5,150,105,.28);flex-shrink:0;}
+.cb-mic:hover{transform:scale(1.08);}
+.cb-mic:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.cb-mic.listening{background:linear-gradient(135deg,#dc2626,#ef4444);animation:pulse-mic 1s infinite;}
+@keyframes pulse-mic{0%,100%{box-shadow:0 2px 12px rgba(220,38,38,.4);}50%{box-shadow:0 2px 20px rgba(220,38,38,.8);}}
 .cb-input{flex:1;background:#f0f9ff;border:2px solid transparent;border-radius:18px;padding:10px 15px;font-size:.87rem;font-family:'DM Sans',sans-serif;color:var(--slate);resize:none;min-height:42px;max-height:96px;outline:none;transition:border-color .2s;line-height:1.4;}
 .cb-input:focus{border-color:#0ea5e9;background:var(--white);}
 .cb-input::placeholder{color:var(--slate-light);font-weight:500;}
@@ -997,6 +1002,7 @@ body.logged-in #tryit {
     <div class="cb-input-row">
       <textarea class="cb-input" id="cbInput" placeholder="Type your homework question here..." rows="1"
         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="cb-mic" id="cbMic" onclick="toggleVoiceInput()" title="Speak your question">🎤</button>
       <button class="cb-send" id="cbSend" onclick="sendMsg()">➤</button>
     </div>
     </div><!-- close cb-msgs -->
@@ -2768,6 +2774,73 @@ function removeTyping() {
   if (t) t.remove();
 }
 
+// ── HANDS-FREE VOICE INPUT ──
+let recognition = null;
+let isListening = false;
+
+function toggleVoiceInput() {
+  const micBtn = document.getElementById('cbMic');
+  const input = document.getElementById('cbInput');
+
+  // Check browser support
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input is not supported in this browser. Please use Chrome or Safari.');
+    return;
+  }
+
+  if (isListening) {
+    // Stop listening
+    if (recognition) recognition.stop();
+    return;
+  }
+
+  // Start listening
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = function() {
+    isListening = true;
+    micBtn.classList.add('listening');
+    micBtn.title = 'Listening... tap to stop';
+    input.placeholder = '🎤 Listening... speak your question';
+  };
+
+  recognition.onresult = function(event) {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    input.value = transcript;
+    autoResize(input);
+  };
+
+  recognition.onend = function() {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    micBtn.title = 'Speak your question';
+    input.placeholder = 'Type your homework question here...';
+    // Auto-send if we got a result
+    if (input.value.trim()) {
+      setTimeout(() => sendMsg(), 500);
+    }
+  };
+
+  recognition.onerror = function(event) {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    micBtn.title = 'Speak your question';
+    input.placeholder = 'Type your homework question here...';
+    if (event.error !== 'no-speech') {
+      console.error('Speech recognition error:', event.error);
+    }
+  };
+
+  recognition.start();
+}
+
 async function sendMsg() {
   const input = document.getElementById('cbInput');
   const sendBtn = document.getElementById('cbSend');
@@ -3384,8 +3457,10 @@ function showPaywall() {
     overlay.style.display = 'flex';
     const input = document.getElementById('cbInput');
     const sendBtn = document.getElementById('cbSend');
+    const micBtn = document.getElementById('cbMic');
     if(input) input.disabled = true;
     if(sendBtn) sendBtn.disabled = true;
+    if(micBtn) micBtn.disabled = true;
     if(input) input.placeholder = 'Subscribe to continue chatting with Ollie...';
   }
 }
