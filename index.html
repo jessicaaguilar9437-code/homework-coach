@@ -285,7 +285,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 /* ── CHATBOT ── */
 .chat-sec{background:linear-gradient(160deg,#f0f9ff 0%,#fef9ec 100%);text-align:center;}
 .chat-sec .s-sub{margin:0 auto 44px;}
-.chatbot-wrap{max-width:600px;margin:0 auto;background:var(--white);border-radius:28px;box-shadow:var(--shadow-xl);overflow:hidden;border:2px solid rgba(3,105,161,.12);height:700px;display:flex;flex-direction:column;text-align:left;}
+.chatbot-wrap{max-width:780px;margin:0 auto;background:var(--white);border-radius:28px;box-shadow:var(--shadow-xl);overflow:hidden;border:2px solid rgba(3,105,161,.12);min-height:800px;display:flex;flex-direction:column;text-align:left;}
 
 /* OLLIE HEADER - fun & colorful */
 .cb-head{background:linear-gradient(135deg,#0369a1 0%,#0ea5e9 60%,#38bdf8 100%);padding:16px 20px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;}
@@ -321,7 +321,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .sb{background:var(--white);border:1.5px solid rgba(3,105,161,.14);border-radius:14px;padding:3px 11px;font-size:.67rem;font-weight:700;color:var(--slate-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .sb:hover{background:#e0f2fe;border-color:#0369a1;color:#0369a1;}
 .sb.active{background:#0369a1;color:var(--white);border-color:#0369a1;box-shadow:0 2px 8px rgba(3,105,161,.3);}
-.cb-msgs{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+.cb-msgs{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;min-height:380px;}
 .cb-msgs::-webkit-scrollbar{width:3px;}.cb-msgs::-webkit-scrollbar-thumb{background:#bae6fd;border-radius:3px;}
 .cmsg{display:flex;align-items:flex-end;gap:8px;animation:msgIn .3s ease;}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -343,6 +343,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .csugg{background:var(--white);border:1.5px solid rgba(3,105,161,.16);border-radius:14px;padding:5px 13px;font-size:.74rem;font-weight:700;color:#0369a1;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .csugg:hover{background:#e0f2fe;border-color:#0ea5e9;}
 .cb-input-row{padding:12px 16px;background:var(--white);border-top:1.5px solid var(--sky);display:flex;gap:10px;align-items:flex-end;}
+.cb-mic{width:42px;height:42px;background:linear-gradient(135deg,#059669,#10b981);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:18px;transition:all .2s;box-shadow:0 2px 12px rgba(5,150,105,.28);flex-shrink:0;}
+.cb-mic:hover{transform:scale(1.08);}
+.cb-mic:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.cb-mic.listening{background:linear-gradient(135deg,#dc2626,#ef4444);animation:pulse-mic 1s infinite;}
+@keyframes pulse-mic{0%,100%{box-shadow:0 2px 12px rgba(220,38,38,.4);}50%{box-shadow:0 2px 20px rgba(220,38,38,.8);}}
 .cb-input{flex:1;background:#f0f9ff;border:2px solid transparent;border-radius:18px;padding:10px 15px;font-size:.87rem;font-family:'DM Sans',sans-serif;color:var(--slate);resize:none;min-height:42px;max-height:96px;outline:none;transition:border-color .2s;line-height:1.4;}
 .cb-input:focus{border-color:#0ea5e9;background:var(--white);}
 .cb-input::placeholder{color:var(--slate-light);font-weight:500;}
@@ -362,7 +367,97 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .paywall-features span{font-size:.8rem;color:#0369a1;font-weight:600;}
 .paywall-note{font-size:.72rem;color:#94a3b8;margin-top:12px;}
 
-/* ── NEW GRADE & SUBJECT SELECTION STYLES ── */
+/* ── FULL SCREEN WORKSPACE ── */
+#ollieWorkspace{display:none;flex-direction:column;flex:1;min-height:0;}
+.chatbot-wrap.fullscreen{position:fixed;top:0;left:0;width:100vw;height:100vh;max-width:100vw;border-radius:0;border:none;z-index:9998;margin:0;min-height:100vh;display:flex;flex-direction:column;}
+.chatbot-wrap{max-width:780px;margin:0 auto;background:var(--white);border-radius:28px;box-shadow:var(--shadow-xl);overflow:hidden;border:2px solid rgba(3,105,161,.12);min-height:800px;display:flex;flex-direction:column;text-align:left;}
+
+/* ── FULL SCREEN APP NAV ── */
+.fs-app-nav{background:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(3,105,161,.1);flex-shrink:0;}
+.fs-nav-logo{display:flex;align-items:center;gap:10px;}
+.fs-nav-logo-icon{width:36px;height:36px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #bae6fd;overflow:hidden;}
+.fs-nav-brand{font-family:'Fraunces',serif;font-size:13px;color:#0369a1;line-height:1.2;}
+.fs-nav-brand small{display:block;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;color:#0ea5e9;text-transform:uppercase;letter-spacing:.09em;}
+.fs-nav-right{display:flex;align-items:center;gap:10px;}
+.fs-nav-stars{display:flex;align-items:center;gap:4px;}
+.fs-nav-star{font-size:16px;transition:transform .3s;color:#e0f2fe;}
+.fs-nav-star.earned{color:#f59e0b;transform:scale(1.2);}
+.fs-nav-subject-badge{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;border-radius:50px;padding:5px 14px;font-size:.72rem;font-weight:700;}
+.fs-change-btn{background:none;border:1.5px solid rgba(3,105,161,.2);border-radius:50px;padding:5px 14px;font-size:.72rem;color:#0369a1;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;}
+.fs-msgs-left{font-size:.68rem;font-weight:700;color:#10b981;background:#f0fdf4;border:1px solid #6ee7b7;border-radius:50px;padding:3px 10px;}
+
+/* ── FULL SCREEN WORKSPACE BODY ── */
+.fs-workspace-body{flex:1;display:grid;grid-template-columns:280px 1fr;min-height:0;overflow:hidden;}
+@media(max-width:768px){.fs-workspace-body{grid-template-columns:1fr;}.fs-left-panel{display:none;}}
+
+/* ── LEFT PANEL ── */
+.fs-left-panel{background:#fff;border-right:1px solid rgba(3,105,161,.08);padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.fs-panel-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#0369a1;background:#e0f2fe;border-radius:50px;padding:3px 10px;display:inline-block;margin-bottom:6px;}
+.fs-problem-card{background:#f0f9ff;border:1.5px solid rgba(3,105,161,.1);border-radius:14px;padding:14px;}
+.fs-problem-title{font-family:'Fraunces',serif;font-size:.82rem;color:#0369a1;margin-bottom:8px;}
+.fs-problem-text{font-size:.85rem;color:#334155;line-height:1.6;background:#fff;border-radius:8px;padding:10px;border:1px solid rgba(3,105,161,.08);min-height:60px;}
+.fs-steps{display:flex;flex-direction:column;gap:6px;}
+.fs-step{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#f8faff;border:1px solid rgba(3,105,161,.06);}
+.fs-step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;}
+.fs-step-done{background:#10b981;color:#fff;}
+.fs-step-now{background:#0369a1;color:#fff;box-shadow:0 0 0 3px rgba(3,105,161,.2);}
+.fs-step-wait{background:#e0f2fe;color:#94a3b8;}
+.fs-step-text{font-size:.72rem;color:#334155;}
+.fs-step-text.done-text{color:#10b981;text-decoration:line-through;}
+.fs-step-text.wait-text{color:#94a3b8;}
+.fs-mastery-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8faff;border-radius:10px;border:1px solid rgba(3,105,161,.06);}
+.fs-mastery-label{font-size:.68rem;color:#64748b;flex:1;}
+.fs-mastery-track{flex:2;height:6px;background:#e0f2fe;border-radius:50px;overflow:hidden;}
+.fs-mastery-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,#0369a1,#0ea5e9);width:0%;transition:width .5s;}
+.fs-mastery-pct{font-size:.68rem;font-weight:700;color:#0369a1;}
+
+/* ── RIGHT PANEL — FLASHCARD AREA ── */
+.fs-right-panel{background:#f8faff;display:flex;flex-direction:column;min-height:0;}
+.fs-flashcard-scroll{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+
+/* ── FLASHCARD MESSAGES ── */
+.cmsg{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;}
+.cmsg.bot .cbubble{background:#fff;border:1.5px solid rgba(3,105,161,.1);border-radius:20px;padding:20px 24px;width:100%;max-width:560px;text-align:center;box-shadow:0 4px 20px rgba(3,105,161,.07);font-size:.9rem;color:#0369a1;line-height:1.65;font-family:'Fraunces',serif;animation:slideUp .3s ease;}
+.cmsg.bot .cbubble.correct{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#6ee7b7;color:#166534;}
+.cmsg.user .cbubble{background:linear-gradient(135deg,#0369a1,#0ea5e9);border-radius:16px;padding:12px 20px;color:#fff;font-size:.88rem;width:auto;max-width:400px;text-align:center;align-self:center;}
+.cmsg-av{display:none;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── OLLIE AVATAR ABOVE FLASHCARD ── */
+.cmsg.bot::before{content:'';display:block;width:36px;height:36px;border-radius:50%;background:#dbeafe url("https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG") center/cover;border:2px solid #bae6fd;margin-bottom:8px;flex-shrink:0;}
+.cmsg.user::before{content:'👤';display:block;font-size:20px;margin-bottom:6px;text-align:center;}
+
+/* ── HINT CARD STYLE ── */
+.fs-hint-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #6ee7b7;border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:10px;max-width:560px;align-self:center;}
+.fs-hint-text{font-size:.78rem;color:#166534;line-height:1.5;}
+
+/* ── GAME UNLOCK CARD ── */
+.game-unlock-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:20px;padding:24px;width:100%;max-width:560px;align-self:center;text-align:center;animation:slideUp .4s ease;box-shadow:0 8px 32px rgba(245,158,11,.2);}
+.game-unlock-title{font-family:'Fraunces',serif;font-size:1.2rem;color:#92400e;margin-bottom:8px;}
+.game-unlock-sub{font-size:.82rem;color:#a16207;margin-bottom:16px;}
+.game-unlock-btn{background:#f59e0b;color:#fff;border:none;border-radius:50px;padding:12px 28px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(245,158,11,.3);transition:all .2s;}
+.game-unlock-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,.4);}
+.game-skip-btn{background:none;border:none;color:#a16207;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:10px;display:block;width:100%;}
+
+/* ── TYPING DOTS ── */
+.cb-dots{background:#fff;border:1.5px solid rgba(3,105,161,.1);border-radius:20px;padding:16px 24px;display:flex;gap:6px;align-items:center;justify-content:center;max-width:120px;align-self:center;}
+.cb-dots span{width:8px;height:8px;background:#0369a1;border-radius:50%;animation:td .8s infinite;}
+.cb-dots span:nth-child(2){animation-delay:.16s;}
+.cb-dots span:nth-child(3){animation-delay:.32s;}
+@keyframes td{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+/* ── VOICE BUTTON ── */
+.voice-btn{background:none;border:none;cursor:pointer;font-size:14px;margin-left:8px;opacity:.6;transition:opacity .2s;}
+.voice-btn:hover{opacity:1;}
+
+/* ── INPUT AREA ── */
+.fs-input-area{background:#fff;border-top:1px solid rgba(3,105,161,.08);padding:14px 20px;display:flex;gap:10px;align-items:center;flex-shrink:0;}
+
+/* ── BOTTOM BAR ── */
+.fs-bottom-bar{background:#f8faff;border-top:1px solid rgba(3,105,161,.06);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.fs-bottom-safe{font-size:.65rem;color:#94a3b8;}
+.fs-progress-strip{height:3px;background:#e0f2fe;flex-shrink:0;}
+.fs-progress-strip-fill{height:100%;background:linear-gradient(90deg,#0369a1,#0ea5e9);width:0%;transition:width .5s;}
 .selection-screen{padding:16px 20px;}
 .sel-screen-title{font-family:'Fraunces',serif;font-size:1rem;color:#0369a1;margin-bottom:4px;}
 .sel-screen-sub{font-size:.78rem;color:#94a3b8;margin-bottom:14px;}
@@ -385,11 +480,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .new-grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px;}
 .new-g-card{background:#f8faff;border:1.5px solid rgba(3,105,161,.1);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s;}
 .new-g-card:hover{border-color:#0369a1;background:#f0f9ff;transform:translateY(-2px);}
-.new-g-card.active{background:linear-gradient(135deg,#0369a1,#0ea5e9);border-color:#0369a1;box-shadow:0 3px 12px rgba(3,105,161,.25);transform:translateY(-2px);}
-.new-g-card.active .new-g-num{color:#fff;}
-.new-g-card.active .new-g-age{color:rgba(255,255,255,.7);}
-.new-g-card.m.active{background:linear-gradient(135deg,#6d28d9,#7c3aed);border-color:#6d28d9;}
-.new-g-card.h.active{background:linear-gradient(135deg,#92400e,#b45309);border-color:#92400e;}
+.new-g-card.active{background:linear-gradient(135deg,#dbeafe,#bae6fd);border-color:#60a5fa;box-shadow:0 3px 12px rgba(3,105,161,.2);transform:translateY(-2px);}
+.new-g-card.active .new-g-num{color:#1e40af;}
+.new-g-card.active .new-g-age{color:#3b82f6;}
+.new-g-card.m.active{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#a78bfa;box-shadow:0 3px 12px rgba(139,92,246,.2);}
+.new-g-card.m.active .new-g-num{color:#6d28d9;}
+.new-g-card.m.active .new-g-age{color:#7c3aed;}
+.new-g-card.h.active{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;box-shadow:0 3px 12px rgba(245,158,11,.2);}
+.new-g-card.h.active .new-g-num{color:#92400e;}
+.new-g-card.h.active .new-g-age{color:#b45309;}
 .new-g-icon{font-size:18px;margin-bottom:4px;}
 .new-g-num{font-family:'Fraunces',serif;font-size:.8rem;font-weight:700;color:#0369a1;margin-bottom:1px;}
 .new-g-age{font-size:.6rem;color:#94a3b8;}
@@ -565,6 +664,13 @@ body.logged-in .nav-try-ollie { display: none !important; }
 body.logged-in #tryit { 
   min-height: 100vh; 
   padding-top: 20px;
+}
+body.logged-in .chatbot-wrap {
+  max-width: 900px;
+  min-height: 80vh;
+}
+body.logged-in #ollieWorkspace {
+  min-height: 600px;
 }
 </style>
 <!-- Supabase -->
@@ -1134,27 +1240,42 @@ body.logged-in #tryit {
       <button class="new-continue-btn" id="newContinueBtn" disabled onclick="newGoNext()">Continue →</button>
     </div>
 
-    <!-- WORKSPACE — appears after grade + subject selected -->
+    <!-- WORKSPACE — Full Screen App when subject selected -->
     <div id="ollieWorkspace" style="display:none;flex-direction:column;flex:1;">
 
-      <!-- Workspace Subject Header -->
-      <div class="ws-subj-header-bar">
-        <button class="ws-back-to-select" onclick="backToSelection()">← Change</button>
-        <div class="ws-active-badge" id="wsActiveBadge">✏️ Math · Grade 7</div>
-        <div class="ws-free-count" id="wsFreeCount">5 msgs left</div>
+      <!-- Full Screen App Nav -->
+      <div class="fs-app-nav">
+        <div class="fs-nav-logo">
+          <div class="fs-nav-logo-icon">
+            <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;">
+          </div>
+          <div class="fs-nav-brand">The Homework Coach<small>Guidance, never answers</small></div>
+        </div>
+        <div class="fs-nav-right">
+          <div class="fs-nav-stars" id="fsNavStars">
+            <span class="fs-nav-star" id="fstar1">⭐</span>
+            <span class="fs-nav-star" id="fstar2">⭐</span>
+            <span class="fs-nav-star" id="fstar3">⭐</span>
+            <span class="fs-nav-star" id="fstar4">⭐</span>
+            <span class="fs-nav-star" id="fstar5">⭐</span>
+          </div>
+          <div class="fs-nav-subject-badge" id="fsSubjectBadge">📚 Subject</div>
+          <button class="fs-change-btn" onclick="exitFullscreenWorkspace()">← Change</button>
+          <div class="fs-msgs-left" id="fsMsgsLeft">5 msgs left</div>
+        </div>
       </div>
-      <div class="ws-prog-bar"><div class="ws-prog-fill" id="wsProgFill"></div></div>
 
-      <!-- Spelling Helper Tip -->
-      <div id="spellingTip" style="display:none;background:#fef3c7;border-bottom:1px solid #fde68a;padding:8px 18px;align-items:center;gap:8px;">
+      <!-- Progress Strip -->
+      <div class="fs-progress-strip"><div class="fs-progress-strip-fill" id="fsProgressFill"></div></div>
+
+      <!-- Spelling Tip -->
+      <div id="spellingTip" style="display:none;background:#fef3c7;border-bottom:1px solid #fde68a;padding:8px 18px;align-items:center;gap:8px;flex-shrink:0;">
         <span style="font-size:1rem;">✏️</span>
-        <p style="font-size:.72rem;font-weight:600;color:#92400e;line-height:1.5;">
-          <strong>Spelling tip for kids:</strong> Type the word as best you can — even if it looks wrong — and Ollie will guide you to the correct spelling step by step!
-        </p>
+        <p style="font-size:.72rem;font-weight:600;color:#92400e;line-height:1.5;"><strong>Spelling tip for kids:</strong> Type the word as best you can — even if it looks wrong — and Ollie will guide you to the correct spelling step by step!</p>
       </div>
 
       <!-- Workspace Body -->
-      <div style="position:relative;flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="position:relative;flex:1;display:flex;flex-direction:column;min-height:0;">
 
         <!-- Paywall Overlay -->
         <div class="paywall-overlay" id="paywallOverlay">
@@ -1175,48 +1296,79 @@ body.logged-in #tryit {
           </div>
         </div>
 
-        <!-- Stars & Streak Bar -->
-        <div class="cb-stars-bar" id="starsBar">
-          <div class="cb-stars-left">
-            <span class="cb-stars-label">⭐ Stars:</span>
-            <div class="stars-display">
-              <span class="star" id="star1">⭐</span>
-              <span class="star" id="star2">⭐</span>
-              <span class="star" id="star3">⭐</span>
-              <span class="star" id="star4">⭐</span>
-              <span class="star" id="star5">⭐</span>
+        <!-- Full Screen Workspace Grid -->
+        <div class="fs-workspace-body">
+
+          <!-- Left Panel — Problem + Steps -->
+          <div class="fs-left-panel">
+            <div>
+              <div class="fs-panel-label">Your Problem</div>
+              <div class="fs-problem-card">
+                <div class="fs-problem-title" id="fsProblemTitle">What are you working on?</div>
+                <div class="fs-problem-text" id="fsProblemText">Type or speak your homework question to get started with Ollie.</div>
+              </div>
             </div>
-            <span style="font-size:.75rem;font-weight:800;color:#92400e;margin-left:2px;" id="starCount">0</span>
-            <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;margin-left:10px;"></span>
+
+            <div>
+              <div class="fs-panel-label">Session Progress</div>
+              <div class="fs-mastery-row">
+                <div class="fs-mastery-label" id="fsMasteryLabel">Mastery</div>
+                <div class="fs-mastery-track"><div class="fs-mastery-fill" id="fsMasteryFill"></div></div>
+                <div class="fs-mastery-pct" id="fsMasteryPct">0%</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="fs-panel-label">Stars earned</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
+                <span style="font-size:.7rem;font-weight:700;color:#92400e;">⭐</span>
+                <div class="stars-display">
+                  <span class="star" id="star1">⭐</span>
+                  <span class="star" id="star2">⭐</span>
+                  <span class="star" id="star3">⭐</span>
+                  <span class="star" id="star4">⭐</span>
+                  <span class="star" id="star5">⭐</span>
+                </div>
+                <span style="font-size:.75rem;font-weight:800;color:#92400e;" id="starCount">0</span>
+                <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;"></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="fs-panel-label">Session Progress</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
+                <span style="font-size:.7rem;font-weight:700;color:#92400e;">Progress:</span>
+                <div class="cb-progress-bar" style="flex:1;"><div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:50px;transition:width .4s ease;"></div></div>
+                <span style="font-size:.7rem;font-weight:800;color:#92400e;" id="progressPct">0%</span>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:.7rem;font-weight:700;color:#92400e;">Progress:</span>
-            <div class="cb-progress-bar"><div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:50px;transition:width .4s ease;"></div></div>
-            <span style="font-size:.7rem;font-weight:800;color:#92400e;" id="progressPct">0%</span>
+
+          <!-- Right Panel — Flashcard Messages -->
+          <div class="fs-right-panel">
+            <div class="fs-flashcard-scroll" id="cbMsgs">
+              <div class="cmsg bot">
+                <div class="cbubble" id="welcomeMsg">Hi! I'm Ollie, your Homework Coach. 😊 What are we working on today?</div>
+              </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="fs-input-area">
+              <textarea class="cb-input" id="cbInput" placeholder="Type your answer or speak to Ollie..." rows="1"
+                onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+              <button class="cb-mic" id="cbMic" onclick="toggleVoiceInput()" title="Speak your question">🎤</button>
+              <button class="cb-send" id="cbSend" onclick="sendMsg()">➤</button>
+            </div>
           </div>
         </div>
 
-        <!-- Chat Messages -->
-        <div class="cb-msgs" id="cbMsgs">
-          <div class="cmsg bot">
-            <div class="cmsg-av">
-              <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;">
-            </div>
-            <div class="cbubble" id="welcomeMsg">Hi! I'm Ollie, your Homework Coach. 😊 What are we working on today?</div>
-          </div>
-        </div>
-
-        <!-- Input Row -->
-        <div class="cb-input-row">
-          <textarea class="cb-input" id="cbInput" placeholder="Type your homework question here..." rows="1"
-            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-          <button class="cb-mic" id="cbMic" onclick="toggleVoiceInput()" title="Speak your question">🎤</button>
-          <button class="cb-send" id="cbSend" onclick="sendMsg()">➤</button>
-        </div>
       </div><!-- close position:relative -->
 
       <div class="celebration-msg" id="celebrationMsg"></div>
-      <div class="cb-footer-note">🔒 Safe for children · Academic questions only · Ollie guides thinking — direct answers are never provided</div>
+      <div class="fs-bottom-bar">
+        <div class="fs-bottom-safe">🔒 Safe for children · Academic questions only · Direct answers are never provided</div>
+        <div class="fs-msgs-left" id="fsMsgsLeftBottom">5 msgs left</div>
+      </div>
       <div class="cb-feedback-row" id="feedbackRow" style="display:none;">
         <span class="cb-feedback-label">Was this response helpful?</span>
         <button class="fb-btn thumbs-up" id="fbUp" onclick="submitFeedback('up')">👍 Yes</button>
@@ -3359,6 +3511,61 @@ window.addEventListener('beforeunload', async () => {
   }
 });
 
+// ── HANDS-FREE VOICE INPUT ──
+let recognition = null;
+let isListening = false;
+
+function toggleVoiceInput() {
+  const micBtn = document.getElementById('cbMic');
+  const input = document.getElementById('cbInput');
+
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input is not supported in this browser. Please use Chrome or Safari.');
+    return;
+  }
+
+  if (isListening) {
+    if (recognition) recognition.stop();
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = function() {
+    isListening = true;
+    if (micBtn) { micBtn.classList.add('listening'); micBtn.title = 'Listening... tap to stop'; }
+    if (input) input.placeholder = '🎤 Listening... speak your question';
+  };
+
+  recognition.onresult = function(event) {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    if (input) { input.value = transcript; autoResize(input); }
+  };
+
+  recognition.onend = function() {
+    isListening = false;
+    if (micBtn) { micBtn.classList.remove('listening'); micBtn.title = 'Speak your question'; }
+    if (input) input.placeholder = 'Type your homework question here...';
+    if (input && input.value.trim()) { setTimeout(() => sendMsg(), 500); }
+  };
+
+  recognition.onerror = function(event) {
+    isListening = false;
+    if (micBtn) { micBtn.classList.remove('listening'); micBtn.title = 'Speak your question'; }
+    if (input) input.placeholder = 'Type your homework question here...';
+    if (event.error !== 'no-speech') console.error('Speech recognition error:', event.error);
+  };
+
+  recognition.start();
+}
+
 // ── NEW GRADE & SUBJECT SELECTION FLOW ──
 let newSelGrade = '';
 let newSelGradeLabel = '';
@@ -3423,10 +3630,12 @@ function newGoNext() {
     const workspace = document.getElementById('ollieWorkspace');
     workspace.style.display = 'flex';
 
-    // Set workspace badge
+    // Activate full screen
+    const shortName = newSelSubject === 'Mathematics' ? 'Math' : newSelSubject === 'Reading & Literature' ? 'Reading' : newSelSubject === 'Writing, Grammar & Spelling' ? 'Writing' : newSelSubject;
     const subjectIcons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍','Quiz Mode':'🎯'};
     const icon = subjectIcons[newSelSubject] || '📚';
-    document.getElementById('wsActiveBadge').textContent = icon + ' ' + (newSelSubject === 'Mathematics' ? 'Math' : newSelSubject === 'Reading & Literature' ? 'Reading' : newSelSubject === 'Writing, Grammar & Spelling' ? 'Writing' : newSelSubject) + ' · ' + newSelGradeLabel;
+
+    activateFullscreenWorkspace(newSelSubject, shortName, newSelGradeLabel, icon);
 
     // Set subject and grade for Ollie
     currentSubject = newSelSubject;
@@ -3442,11 +3651,18 @@ function newGoNext() {
       document.getElementById('spellingTip').style.display = 'flex';
     }
 
-    // Update free message count display
+    // Reset free message count for fresh session display
     updateFreeCountDisplay();
 
     // Reset session tracking
     resetSessionTracking();
+
+    // Clear chat for new subject session
+    const msgs = document.getElementById('cbMsgs');
+    if (msgs) {
+      msgs.innerHTML = `<div class="cmsg bot"><div class="cmsg-av"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;"></div><div class="cbubble">Hi! I'm Ollie, your Homework Coach. 😊 I see you're working on <strong>${shortName}</strong> — what's your homework question?</div></div>`;
+    }
+    history = [];
     newCurrentScreen = 3;
   }
 }
@@ -3495,17 +3711,109 @@ function backToSelection() {
 
 function updateFreeCountDisplay() {
   const remaining = Math.max(0, 5 - freeMessageCount);
-  const el = document.getElementById('wsFreeCount');
-  if (el) {
+  const els = [document.getElementById('wsFreeCount'), document.getElementById('fsMsgsLeft'), document.getElementById('fsMsgsLeftBottom')];
+  els.forEach(el => {
+    if (!el) return;
     if (currentUser && isSubscribed) {
       el.textContent = '✅ Unlimited';
-      el.style.background = '#f0fdf4';
       el.style.color = '#10b981';
     } else {
       el.textContent = remaining + ' msgs left';
       el.style.color = remaining <= 2 ? '#ef4444' : '#10b981';
     }
+  });
+}
+
+// ── FULL SCREEN WORKSPACE ACTIVATION ──
+function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon) {
+  const chatbotWrap = document.querySelector('.chatbot-wrap');
+  if (chatbotWrap) chatbotWrap.classList.add('fullscreen');
+  document.body.style.overflow = 'hidden';
+
+  // Set nav badges
+  const subjBadge = document.getElementById('fsSubjectBadge');
+  if (subjBadge) subjBadge.textContent = icon + ' ' + subjectLabel;
+
+  // Update problem title
+  const probTitle = document.getElementById('fsProblemTitle');
+  if (probTitle) probTitle.textContent = subjectLabel + ' · ' + gradeLabel;
+
+  // Update mastery label
+  const mastLabel = document.getElementById('fsMasteryLabel');
+  if (mastLabel) mastLabel.textContent = subjectLabel + ' mastery';
+
+  // Update free messages display
+  updateFreeCountDisplay();
+
+  // Reset session
+  resetSessionTracking();
+  sessionStarCount = 0;
+
+  // Clear and reset chat
+  const msgs = document.getElementById('cbMsgs');
+  if (msgs) {
+    msgs.innerHTML = `<div class="cmsg bot"><div class="cbubble" id="welcomeMsg">Hi! I'm Ollie, your Homework Coach. 😊 I see you're working on <strong>${subjectLabel}</strong> — what's your homework question?</div></div>`;
   }
+  history = [];
+}
+
+function exitFullscreenWorkspace() {
+  const chatbotWrap = document.querySelector('.chatbot-wrap');
+  if (chatbotWrap) chatbotWrap.classList.remove('fullscreen');
+  document.body.style.overflow = '';
+  backToSelection();
+}
+
+// ── GAME UNLOCK AT 5 STARS ──
+let sessionStarCount = 0;
+const subjectGames = {
+  'Mathematics': { name: 'Fraction Pizza', icon: '🍕', desc: 'Ollie will quiz you on exactly what you just practiced — one question at a time!' },
+  'Reading & Literature': { name: 'Detective Story', icon: '🔍', desc: 'Use the clues from what you just read to solve the mystery!' },
+  'Writing, Grammar & Spelling': { name: 'Sentence Builder', icon: '✍️', desc: 'Drag and drop words to build the perfect sentence from what you just learned!' },
+  'Science': { name: 'Lab Challenge', icon: '🔬', desc: 'Apply what you just learned about science in a hands-on lab challenge!' },
+  'Social Studies': { name: 'History Sorter', icon: '🌍', desc: 'Sort the events and concepts from what you just studied!' }
+};
+
+function checkGameUnlock() {
+  sessionStarCount++;
+  if (sessionStarCount >= 5) {
+    const game = subjectGames[currentSubject] || { name: 'Quiz Challenge', icon: '🎯', desc: 'Test what you just learned with Ollie!' };
+    showGameUnlockCard(game);
+    sessionStarCount = 0;
+  }
+}
+
+function showGameUnlockCard(game) {
+  const msgs = document.getElementById('cbMsgs');
+  if (!msgs) return;
+  const card = document.createElement('div');
+  card.className = 'game-unlock-card';
+  card.innerHTML = `
+    <div style="font-size:40px;margin-bottom:12px;">${game.icon}</div>
+    <div class="game-unlock-title">🎉 You earned 5 stars! Your game is unlocked!</div>
+    <div class="game-unlock-sub">${game.name} — ${game.desc}</div>
+    <button class="game-unlock-btn" onclick="launchGame('${currentSubject}')">Play ${game.name} Now →</button>
+    <button class="game-skip-btn" onclick="this.parentElement.remove()">Skip for now — keep practicing with Ollie</button>
+  `;
+  msgs.appendChild(card);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function launchGame(subject) {
+  const game = subjectGames[subject] || { name: 'Quiz Challenge', icon: '🎯' };
+  const msgs = document.getElementById('cbMsgs');
+  if (msgs) {
+    document.querySelectorAll('.game-unlock-card').forEach(c => c.remove());
+    const gameMsg = document.createElement('div');
+    gameMsg.className = 'cmsg bot';
+    gameMsg.innerHTML = `<div class="cbubble correct">🎮 Starting ${game.name}! Get ready — Ollie will quiz you on exactly what you just learned. Here is your first question...</div>`;
+    msgs.appendChild(gameMsg);
+  }
+  // Trigger a quiz session focused on what was just studied
+  const detected = detectTopicFromHistory();
+  const gamePrompt = `Start a fun interactive quiz game about ${detected.topic} in ${detected.subject}. Ask me one question at a time, give me 4 multiple choice options labeled A B C D, and give me a star for each correct answer. Make it encouraging and fun!`;
+  document.getElementById('cbInput').value = gamePrompt;
+  sendMsg();
 }
 
 // ── DASHBOARD TAB SWITCHING ──
@@ -4157,6 +4465,7 @@ function awardStar() {
     launchConfetti();
     playSuccessSound();
     showCelebration();
+    checkGameUnlock();
   } catch(e) { console.log('Star system:', e.message); }
 }
 
