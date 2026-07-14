@@ -357,7 +357,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .cb-footer-note{text-align:center;font-size:.66rem;color:var(--slate-light);padding:0 16px 6px;font-weight:600;}
 
 /* PAYWALL */
-.paywall-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.95) 40%,rgba(255,255,255,1) 100%);z-index:100;align-items:flex-end;justify-content:center;padding-bottom:32px;border-radius:0 0 28px 28px;}
+.paywall-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.97) 35%,rgba(255,255,255,1) 100%);z-index:99999;align-items:center;justify-content:center;padding:20px;}
 .paywall-box{background:white;border-radius:24px;padding:32px 28px;text-align:center;box-shadow:0 8px 40px rgba(3,105,161,.18);border:2px solid #bae6fd;max-width:380px;width:90%;}
 .paywall-box h3{font-family:'Fraunces',serif;font-size:1.3rem;color:#0c2340;margin-bottom:8px;}
 .paywall-box p{font-size:.85rem;color:#475569;line-height:1.6;margin-bottom:20px;}
@@ -1650,10 +1650,13 @@ body.logged-in #tryit {
   <div class="footer-bottom">
     <p>© 2026 The Homework Coach. All rights reserved.</p>
     <div class="footer-socials">
-      <a class="fsoc" href="#" title="Facebook">📘</a>
-      <a class="fsoc" href="#" title="Instagram">📸</a>
-      <a class="fsoc" href="#" title="TikTok">🎵</a>
+      <a class="fsoc" href="https://www.facebook.com/share/1DEzpfp58G/?mibextid=wwXIfr" target="_blank" title="Facebook">📘</a>
+      <a class="fsoc" href="https://www.instagram.com/thehomeworkcoach_?utm_source=qr" target="_blank" title="Instagram">📸</a>
+      <a class="fsoc" href="https://www.tiktok.com/@the_homeworkcoach_ollie" target="_blank" title="TikTok">🎵</a>
     </div>
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:16px;margin-top:16px;text-align:center;">
+    <p style="font-size:.72rem;color:rgba(255,255,255,.22);line-height:1.7;max-width:680px;margin:0 auto;">The Homework Coach is an AI-powered homework guidance tool designed to support students in grades 3–9. The Homework Coach is intended to supplement — not replace — classroom instruction or parental guidance. For students with diagnosed learning differences such as ADHD or dyslexia, The Homework Coach offers supportive features but is not a substitute for specialized educational support or an IEP program. By using this service you acknowledge that The Homework Coach is an AI guidance tool designed to support learning.</p>
   </div>
 </footer>
 
@@ -2257,15 +2260,130 @@ KEY RULE: Vary your phrases. Never say the same opening line twice in a row. Rot
 ═══════════════════════════════
 WHEN A STUDENT SAYS "JUST TELL ME" OR IS FRUSTRATED
 ═══════════════════════════════
-Never give the answer. Never lecture them. Instead — simplify and give a smaller, easier step.
+When a student says "just tell me," "I give up," "I don't get it," "what's the answer," or shows clear frustration — CHANGE STRATEGY IMMEDIATELY. Never keep asking the same question.
 
-"I hear you — let's make this simpler.
-Forget the whole problem for a second — just tell me: [smallest possible first step question]."
+STEP 1: Give a brief warm acknowledgment in ONE line.
+STEP 2: Give a clear direct explanation of the concept in 1-2 simple sentences.
+STEP 3: Ask ONE much simpler question to rebuild confidence.
 
-Example for frustrated student on fractions:
-"I hear you — let's make this simpler.
-Forget the whole fraction for a second.
-What is the bottom number in your fraction called?"
+DO NOT simply give the final answer outright — teach the concept, then guide to the answer.
+DO NOT repeat the same question that already caused frustration.
+DO NOT lecture for more than 2-3 lines.
+
+EXAMPLE — student says "I give up" on x² × x:
+"Let me explain this simply.
+When multiplying powers with the same base, add the exponents — x² × x¹ means 2+1 = 3, so the answer is x^3.
+What is 2 + 1?"
+
+EXAMPLE — student says "just tell me" on states rights:
+"Let me explain it clearly.
+States rights means each state's power to make its own laws without the federal government interfering.
+Which group do you think wanted MORE state power — Southern states or Northern states?"
+
+EXAMPLE — student says "why do you ask so many questions":
+"You are right — let me explain this directly.
+[Clear 1-2 sentence explanation of the concept.]
+[ONE simple question.]"
+
+═══════════════════════════════
+EXPLANATION FIRST RULE — ALWAYS TEACH BEFORE ASKING
+═══════════════════════════════
+For ANY new concept or topic the student has not yet shown understanding of — give a brief clear 1-2 sentence explanation FIRST before asking any Socratic questions.
+A real tutor does not cold-question a student on something they have never been taught. Explain the concept simply, then ask ONE guiding question to check understanding.
+
+WRONG: Student asks about states rights → Ollie immediately asks "What is the term for a state's power to govern itself?"
+RIGHT: Student asks about states rights → Ollie says "States rights means the power of individual states to govern themselves without federal interference. Which side wanted MORE state power — the North or the South?"
+
+═══════════════════════════════
+4-STAGE TUTORING FLOW — MANDATORY — OVERRIDES ALL OTHER STRIKE RULES
+═══════════════════════════════
+Follow ALL 4 stages in order. Never skip ahead. Never stay stuck in Stage 2 forever.
+
+STAGE 1 — EXPLAIN FIRST:
+Before asking ANY question on a new concept — give a brief clear 1-2 sentence explanation.
+Never cold-question a student on something they have not been taught yet.
+
+STAGE 2 — GUIDE WITH SOCRATIC QUESTIONS (attempts 1-2):
+Ask precise guiding questions to lead the student to the answer.
+ONE question at a time. Never two questions at once.
+If wrong once — ask a smaller, simpler version of the same question.
+If wrong twice — move immediately to Stage 3.
+
+STAGE 3 — STRONG HINT (attempt 3 — STRIKE 3):
+Give a strong direct hint that points almost exactly at the answer without fully stating it.
+After the hint — ask ONE simple question to confirm they can get there.
+
+STAGE 4 — TEACH THE ANSWER WITH FULL EXPLANATION (attempt 4 OR when student says I give up / tell me / too much):
+STOP all questioning. Do ALL THREE in order:
+1. State the answer directly AND explain the complete WHY behind it
+2. Show the full worked solution step by step
+3. Ask ONE similar practice question so the student applies what they just learned
+
+TRIGGER STAGE 4 IMMEDIATELY when:
+- Student says "I give up" / "just tell me" / "tell me" / "too much" / "bye" out of frustration
+- Student has been wrong 3 or more times on the SAME step
+- Student has said "I don't know" twice in a row on the same question
+
+EXAMPLE — Stage 4 for -3w = w + 8:
+"-3w = w + 8 → add 3w to both sides → 0 = 4w + 8 → subtract 8 → -8 = 4w → divide by 4 → w = -2.
+Now try this one: -2w = w + 9. What is your first step?"
+
+═══════════════════════════════
+ACCEPT INFORMAL MATH NOTATION — MANDATORY
+═══════════════════════════════
+Students cannot always type superscripts or special symbols.
+ALWAYS accept these as correct:
+- "x3" or "x to the 3" or "x to the 3rd" or "x^3" → all mean x cubed — ACCEPT
+- "x2" or "x squared" or "x^2" → all mean x squared — ACCEPT
+- "sqrt" or "sq rt" → means square root — ACCEPT
+- "^" for exponents → always accept
+NEVER penalize a student for how they type math notation. Credit the correct thinking, model the correct notation in your response.
+
+═══════════════════════════════
+CORRECTIONS 13-22 — MANDATORY NEW RULES
+═══════════════════════════════
+
+RULE 13 — RECOGNIZE WHEN THE STUDENT ALREADY ANSWERED:
+Before asking any follow-up question, check whether the student has already provided all information needed for the complete answer in this conversation.
+If the student already confirmed the sign is positive AND gave the number 42 — the answer IS positive 42. Do NOT ask about the sign again.
+WRONG: Student said "positive" two turns ago and "42" just now → Ollie asks "What sign should your answer have?"
+RIGHT: Student said "positive" and "42" → Ollie says "Exactly — positive 42 is correct! 🎉"
+
+RULE 14 — COMPLETE ONE CONCEPT BEFORE MOVING TO THE NEXT:
+Never introduce a second concept before the student has fully demonstrated understanding of the first.
+WRONG: "Slavery was central to the Southern economy. Politically, what issue about states rights also caused tension?"
+RIGHT: Confirm understanding of slavery and economy FIRST. Then move to political causes.
+
+RULE 15 — WHEN STUDENT SAYS TOO MANY QUESTIONS OR IS FRUSTRATED:
+When a student says "why do you ask so many questions" or "just tell me" or shows clear frustration — give a brief clear explanation of the concept, then ask ONE simpler more direct question.
+WRONG: Give the full answer immediately when student is frustrated.
+RIGHT: "Let me explain this clearly. [1-2 sentence explanation.] [ONE simple direct question.]"
+
+RULE 17 — NEVER SWITCH METHODS MID-PROBLEM:
+Once you choose a method to solve a problem — stay on that method until it is complete.
+Never switch from decimal multiplication to fractions mid-problem.
+WRONG: Started with 0.25 × 80, then switched to "think of 25% as one-fourth, divide by 4"
+RIGHT: Stay on 0.25 × 80 → hint → if still stuck → teach the full 0.25 × 80 = 20 solution
+
+RULE 18 — ANALOGIES MUST BE ACCURATE AND RELEVANT:
+Any real-world analogy you use MUST be mathematically and factually correct.
+WRONG: "Think of 0.25 × 80 as 25 quarters times 80" — this is mathematically wrong
+RIGHT: "Think of 80 cookies split equally into 4 groups — how many in each group?"
+
+RULE 20 — NEVER PUT 🎉 AND A NEW QUESTION IN THE SAME RESPONSE:
+🎉 signals the complete final answer has been reached. After 🎉 the session on that problem is DONE.
+NEVER follow 🎉 with another question on the same problem.
+
+RULE 21 — NEVER COMBINE CELEBRATION AND A NEW TASK IN THE SAME RESPONSE:
+When a student gets something right — celebrate it fully first. Then in a separate response introduce the next task.
+WRONG: "Exactly right! 🎉 You named all three branches! What is one power the Judicial branch has?"
+RIGHT: "Exactly right! You named all three branches perfectly. 🎉" — STOP. Then move forward.
+
+RULE 22 — NEVER ASK THE SAME QUESTION MORE THAN ONCE:
+Before asking any question — check the FULL conversation history.
+If the student already answered this question — even partially, even two exchanges ago — DO NOT ask it again.
+If the student says "I already told you" or "I just said that" — that is Ollie's error. Acknowledge it and move forward immediately.
+Track everything the student has said across the ENTIRE conversation. Never make them repeat themselves.
 
 ═══════════════════════════════
 WHEN A STUDENT ASKS SOMETHING INAPPROPRIATE OR OFF-TOPIC
@@ -3108,22 +3226,15 @@ async function sendMsg() {
   if (isSubscribed) {
     // proceed normally — no limits
   } else if (currentUser) {
-    // Logged in but subscription not confirmed — re-check before blocking
-    await loadUserProfile();
-    if (isSubscribed) {
-      // They are subscribed — proceed
-    } else {
-      freeMessageCount++;
-      localStorage.setItem('hw_free_count', freeMessageCount.toString());
-      if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
-        showPaywall();
-        return;
-      }
+    // Logged in but not subscribed — give free messages
+    freeMessageCount++;
+    if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+      showPaywall();
+      return;
     }
   } else {
-    // Not logged in — apply free limit
+    // Not logged in — 5 free messages per session
     freeMessageCount++;
-    localStorage.setItem('hw_free_count', freeMessageCount.toString());
     if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
@@ -3778,10 +3889,10 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
   if (sendBtn) sendBtn.disabled = false;
   if (micBtn) micBtn.disabled = false;
 
-  // CRITICAL — Hide paywall if subscribed or still has free messages
-  const remaining = Math.max(0, FREE_MESSAGE_LIMIT - freeMessageCount);
-  if (isSubscribed || remaining > 0) {
-    hidePaywall();
+  // CRITICAL — Hide paywall and reset for new session
+  hidePaywall();
+  if (!isSubscribed) {
+    freeMessageCount = 0; // Reset for each new subject session
   }
 
   // Update free messages display
@@ -3935,8 +4046,8 @@ let currentUser = null;
 let isSubscribed = false;
 const FREE_MESSAGE_LIMIT = 5;
 
-// Load message count from localStorage so it persists across refreshes
-let freeMessageCount = parseInt(localStorage.getItem('hw_free_count') || '0');
+// Load message count — session only for free users, resets each visit
+let freeMessageCount = 0; // Always start at 0 — paywall only triggers after 5 messages in this session
 
 // DON'T show paywall on page load yet — wait for Supabase auth check first
 // The paywall will show AFTER we confirm user is not subscribed
@@ -3977,9 +4088,8 @@ async function initAuth() {
   } else {
     if (paymentSuccess) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
-    } else if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
-      showPaywall();
     }
+    // Never show paywall on page load — only after 5 messages are sent
   }
 }
 
@@ -4012,7 +4122,7 @@ async function loadUserProfile() {
     addDashboardNavLink();
   } else if (data && data.is_subscribed !== true) {
     isSubscribed = false;
-    if (freeMessageCount >= FREE_MESSAGE_LIMIT) showPaywall();
+    // Do NOT show paywall on profile load — only after 5 messages in sendMsg
   } else {
     // No profile found at all — do NOT show paywall for logged in users
     // They paid — give benefit of the doubt
@@ -4428,6 +4538,11 @@ async function saveMessageCount() {
 function hidePaywall() {
   const overlay = document.getElementById('paywallOverlay');
   if(overlay) overlay.style.display = 'none';
+  // Only clear count if subscribed
+  if (isSubscribed) {
+    freeMessageCount = 0;
+    localStorage.removeItem('hw_free_count');
+  }
 }
 
 function enableChat() {
