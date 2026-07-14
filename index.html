@@ -397,11 +397,21 @@ body.ollie-fullscreen .floating-ollie-btn{display:none!important;}
 @media(max-width:768px){.fs-workspace-body{grid-template-columns:1fr;}.fs-left-panel{display:none;}}
 
 /* ── LEFT PANEL ── */
-.fs-left-panel{background:#fff;border-right:1px solid rgba(3,105,161,.08);padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
-.fs-panel-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#0369a1;background:#e0f2fe;border-radius:50px;padding:3px 10px;display:inline-block;margin-bottom:6px;}
-.fs-problem-card{background:#f0f9ff;border:1.5px solid rgba(3,105,161,.1);border-radius:14px;padding:14px;}
-.fs-problem-title{font-family:'Fraunces',serif;font-size:.82rem;color:#0369a1;margin-bottom:8px;}
-.fs-problem-text{font-size:.85rem;color:#334155;line-height:1.6;background:#fff;border-radius:8px;padding:10px;border:1px solid rgba(3,105,161,.08);min-height:60px;}
+.fs-left-panel{background:#fff;border-right:1px solid rgba(3,105,161,.08);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;font-family:'Fraunces',serif;}
+.fs-panel-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#0369a1;background:#e0f2fe;border-radius:50px;padding:3px 12px;display:inline-block;margin-bottom:8px;font-family:'DM Sans',sans-serif;}
+.fs-problem-card{background:#f0f9ff;border:1.5px solid rgba(3,105,161,.1);border-radius:14px;padding:16px;}
+.fs-problem-title{font-family:'Fraunces',serif;font-size:.95rem;color:#0369a1;margin-bottom:10px;font-weight:700;font-style:italic;}
+.fs-problem-text{font-size:.88rem;color:#334155;line-height:1.7;background:#fff;border-radius:10px;padding:12px 14px;border:1px solid rgba(3,105,161,.08);min-height:80px;font-family:'Fraunces',serif;font-style:italic;color:#1e3a5f;}
+.fs-session-label{font-family:'Fraunces',serif;font-size:.95rem;color:#0369a1;font-weight:700;margin-bottom:6px;}
+.fs-session-desc{font-family:'DM Sans',sans-serif;font-size:.72rem;color:#64748b;line-height:1.5;margin-bottom:10px;}
+.fs-mastery-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8faff;border-radius:10px;border:1px solid rgba(3,105,161,.06);}
+.fs-mastery-label{font-size:.68rem;color:#64748b;flex:1;font-family:'DM Sans',sans-serif;}
+.fs-mastery-track{flex:2;height:6px;background:#e0f2fe;border-radius:50px;overflow:hidden;}
+.fs-mastery-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,#0369a1,#0ea5e9);width:0%;transition:width .5s;}
+.fs-mastery-pct{font-size:.68rem;font-weight:700;color:#0369a1;font-family:'DM Sans',sans-serif;}
+.fs-tip-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #6ee7b7;border-radius:12px;padding:12px 14px;}
+.fs-tip-title{font-family:'Fraunces',serif;font-size:.82rem;color:#166534;margin-bottom:4px;font-weight:700;}
+.fs-tip-text{font-family:'DM Sans',sans-serif;font-size:.72rem;color:#166534;line-height:1.55;}
 .fs-steps{display:flex;flex-direction:column;gap:6px;}
 .fs-step{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#f8faff;border:1px solid rgba(3,105,161,.06);}
 .fs-step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;}
@@ -1300,27 +1310,28 @@ body.logged-in #tryit {
 
           <!-- Left Panel — Problem + Steps -->
           <div class="fs-left-panel">
+
             <div>
-              <div class="fs-panel-label">Your Problem</div>
+              <div class="fs-panel-label">📖 Current Session</div>
               <div class="fs-problem-card">
-                <div class="fs-problem-title" id="fsProblemTitle">What are you working on?</div>
-                <div class="fs-problem-text" id="fsProblemText">Type or speak your homework question to get started with Ollie.</div>
+                <div class="fs-problem-title" id="fsProblemTitle">Mathematics · 7th Grade</div>
+                <div class="fs-problem-text" id="fsProblemText">Speak or type your homework question below to begin your session with Ollie.</div>
               </div>
             </div>
 
             <div>
-              <div class="fs-panel-label">Session Progress</div>
+              <div class="fs-session-label">Session Mastery</div>
+              <div class="fs-session-desc">Ollie tracks your understanding as you work through each problem together.</div>
               <div class="fs-mastery-row">
-                <div class="fs-mastery-label" id="fsMasteryLabel">Mastery</div>
+                <div class="fs-mastery-label" id="fsMasteryLabel">Mastery level</div>
                 <div class="fs-mastery-track"><div class="fs-mastery-fill" id="fsMasteryFill"></div></div>
                 <div class="fs-mastery-pct" id="fsMasteryPct">0%</div>
               </div>
             </div>
 
             <div>
-              <div class="fs-panel-label">Stars earned</div>
-              <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
-                <span style="font-size:.7rem;font-weight:700;color:#92400e;">⭐</span>
+              <div class="fs-panel-label">⭐ Stars Earned</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:10px 12px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
                 <div class="stars-display">
                   <span class="star" id="star1">⭐</span>
                   <span class="star" id="star2">⭐</span>
@@ -1328,19 +1339,25 @@ body.logged-in #tryit {
                   <span class="star" id="star4">⭐</span>
                   <span class="star" id="star5">⭐</span>
                 </div>
-                <span style="font-size:.75rem;font-weight:800;color:#92400e;" id="starCount">0</span>
-                <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;"></span>
+                <span style="font-size:.75rem;font-weight:800;color:#92400e;margin-left:4px;font-family:'DM Sans',sans-serif;" id="starCount">0</span>
+                <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;font-family:'DM Sans',sans-serif;margin-left:6px;"></span>
               </div>
+              <div style="margin-top:6px;font-family:'DM Sans',sans-serif;font-size:.68rem;color:#94a3b8;">Earn 5 stars to unlock your subject game 🎮</div>
             </div>
 
             <div>
-              <div class="fs-panel-label">Session Progress</div>
-              <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
-                <span style="font-size:.7rem;font-weight:700;color:#92400e;">Progress:</span>
+              <div class="fs-panel-label">📊 Progress</div>
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fef9ec;border-radius:10px;border:1px solid #fed7aa;">
                 <div class="cb-progress-bar" style="flex:1;"><div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:50px;transition:width .4s ease;"></div></div>
-                <span style="font-size:.7rem;font-weight:800;color:#92400e;" id="progressPct">0%</span>
+                <span style="font-size:.72rem;font-weight:800;color:#92400e;font-family:'DM Sans',sans-serif;" id="progressPct">0%</span>
               </div>
             </div>
+
+            <div class="fs-tip-card">
+              <div class="fs-tip-title">How Ollie teaches</div>
+              <div class="fs-tip-text">Ollie uses the Socratic Method — asking carefully guided questions so you discover the answer yourself. Research shows this builds 75% stronger retention than being told the answer directly.</div>
+            </div>
+
           </div>
 
           <!-- Right Panel — Flashcard Messages -->
@@ -3750,6 +3767,23 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
   const mastLabel = document.getElementById('fsMasteryLabel');
   if (mastLabel) mastLabel.textContent = subjectLabel + ' mastery';
 
+  // CRITICAL — Always reset input to enabled state when workspace opens
+  const input = document.getElementById('cbInput');
+  const sendBtn = document.getElementById('cbSend');
+  const micBtn = document.getElementById('cbMic');
+  if (input) { 
+    input.disabled = false; 
+    input.placeholder = 'Type your answer or speak to Ollie...';
+  }
+  if (sendBtn) sendBtn.disabled = false;
+  if (micBtn) micBtn.disabled = false;
+
+  // CRITICAL — Hide paywall if subscribed or still has free messages
+  const remaining = Math.max(0, FREE_MESSAGE_LIMIT - freeMessageCount);
+  if (isSubscribed || remaining > 0) {
+    hidePaywall();
+  }
+
   // Update free messages display
   updateFreeCountDisplay();
 
@@ -3783,8 +3817,8 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
 
   // Focus input
   setTimeout(() => {
-    const input = document.getElementById('cbInput');
-    if (input) input.focus();
+    const inp = document.getElementById('cbInput');
+    if (inp && !inp.disabled) inp.focus();
   }, 300);
 }
 
@@ -4394,16 +4428,15 @@ async function saveMessageCount() {
 function hidePaywall() {
   const overlay = document.getElementById('paywallOverlay');
   if(overlay) overlay.style.display = 'none';
-  // Clear the free message count since user is now subscribed
-  freeMessageCount = 0;
-  localStorage.removeItem('hw_free_count');
 }
 
 function enableChat() {
   const input = document.getElementById('cbInput');
   const sendBtn = document.getElementById('cbSend');
-  if(input) { input.disabled = false; input.placeholder = 'Type your homework question here...'; }
+  const micBtn = document.getElementById('cbMic');
+  if(input) { input.disabled = false; input.placeholder = 'Type your answer or speak to Ollie...'; }
   if(sendBtn) sendBtn.disabled = false;
+  if(micBtn) micBtn.disabled = false;
 }
 
 // Initialize on load
@@ -4417,9 +4450,10 @@ function showPaywall() {
     overlay.style.display = 'flex';
     const input = document.getElementById('cbInput');
     const sendBtn = document.getElementById('cbSend');
-    if(input) input.disabled = true;
+    const micBtn = document.getElementById('cbMic');
+    if(input) { input.disabled = true; input.placeholder = 'Subscribe to continue chatting with Ollie...'; }
     if(sendBtn) sendBtn.disabled = true;
-    if(input) input.placeholder = 'Subscribe to continue chatting with Ollie...';
+    if(micBtn) micBtn.disabled = true;
   }
 }
 
