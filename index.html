@@ -3138,7 +3138,8 @@ function handleKey(e) {
 
 function sendSugg(text) {
   document.getElementById('cbInput').value = text;
-  document.getElementById('cbSuggests').style.display = 'none';
+  const suggests = document.getElementById('cbSuggests');
+  if(suggests) suggests.style.display = 'none';
   sendMsg();
 }
 
@@ -3241,7 +3242,8 @@ async function sendMsg() {
     }
   }
 
-  document.getElementById('cbSuggests').style.display = 'none';
+  const suggests = document.getElementById('cbSuggests');
+  if(suggests) suggests.style.display = 'none';
   appendMsg('user', text);
   history.push({ role: 'user', content: text });
 
@@ -3598,7 +3600,8 @@ function startPracticeZone(subject, topic) {
   currentSubject = subject;
   resetSessionTracking();
   history = [];
-  document.getElementById('chatMessages').innerHTML = '';
+  const msgs = document.getElementById('cbMsgs');
+  if(msgs) msgs.innerHTML = '';
   
   const practiceMsg = `I need help practicing ${topic} in ${subject}`;
   document.getElementById('cbInput').value = practiceMsg;
