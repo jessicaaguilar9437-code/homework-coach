@@ -3224,12 +3224,24 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  // FREE MESSAGE LOGIC
-  // Subscribed users — always unlimited
-  if (isSubscribed) {
-    // no limits — proceed
+  // PAYWALL LOGIC — Simple and clear
+  // Rule 1: Any logged in user (subscribed OR not) gets benefit of the doubt — no paywall
+  // Rule 2: Non-logged-in visitors get exactly 5 free messages then paywall
+  if (currentUser) {
+    // Logged in user — check subscription
+    if (isSubscribed) {
+      // Subscribed — unlimited, never paywall
+    } else {
+      // Logged in but not subscribed — still give 5 free messages
+      freeMessageCount++;
+      updateFreeCountDisplay();
+      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+        showPaywall();
+        return;
+      }
+    }
   } else {
-    // Free users — allow 5 messages THEN show paywall
+    // Not logged in — 5 free messages
     freeMessageCount++;
     updateFreeCountDisplay();
     if (freeMessageCount > FREE_MESSAGE_LIMIT) {
@@ -3888,13 +3900,9 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
   if (sendBtn) sendBtn.disabled = false;
   if (micBtn) micBtn.disabled = false;
 
-  // CRITICAL — Hide paywall and reset for new session
+  // CRITICAL — Always hide paywall and reset state when workspace opens
   hidePaywall();
-  if (!isSubscribed) {
-    freeMessageCount = 0; // Reset for each new subject session
-  }
-
-  // Update free messages display
+  freeMessageCount = 0; // Always reset — subscribed users never hit paywall anyway
   updateFreeCountDisplay();
 
   // Reset session
@@ -4074,9 +4082,17 @@ async function initAuth() {
   const { data: { session } } = await sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
+    freeMessageCount = 0; // Reset on any login
     await loadUserProfile();
     updateUserStatusBar();
-    if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
+    // Always hide paywall for logged in users — let subscription check handle limits
+    hidePaywall();
+    enableChat();
+    updateFreeCountDisplay();
+    if (paymentSuccess && isSubscribed) {
+      document.getElementById('paymentSuccessModal') && 
+      (document.getElementById('paymentSuccessModal').style.display = 'flex');
+    }
     // Show set password modal for invite and recovery links
     if (needsPassword) {
       window.history.replaceState({}, '', window.location.pathname);
@@ -4351,17 +4367,14 @@ async function handleAuth() {
     errorEl.style.display = 'block';
   } else {
     currentUser = data.user;
-    // Load profile first and wait for it to complete
+    freeMessageCount = 0; // Always reset on login
     await loadUserProfile();
     updateUserStatusBar();
     closeAuthModal();
-    // Check subscription AFTER profile is loaded
-    if (isSubscribed) {
-      hidePaywall();
-      enableChat();
-    }
-    // If not subscribed — paywall stays visible, no redirect to Stripe
-    // User can try free messages or see paywall
+    // Always hide paywall and enable chat when user logs in
+    hidePaywall();
+    enableChat();
+    updateFreeCountDisplay();
   }
 
   submitBtn.textContent = 'Log In';
