@@ -1537,6 +1537,13 @@ body.logged-in #tryit {
         <div class="dash-loading">Loading Level Up Topics...</div>
       </div>
 
+      <!-- Study Cards -->
+      <div class="dash-section-label" style="margin-top:24px;">📖 My Study Cards</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:10px;font-family:'DM Sans',sans-serif;">Saved after earning 5 stars — review these before your next test</div>
+      <div id="studyCardsList">
+        <div class="dash-loading">Loading study cards...</div>
+      </div>
+
     </div>
 
     <!-- PARENT VIEW -->
@@ -3228,23 +3235,21 @@ async function sendMsg() {
   if (isSubscribed) {
     // Subscribed — unlimited, never paywall
   } else if (currentUser) {
-    // Logged in but subscription not confirmed — re-check before blocking
     await loadUserProfile();
     if (isSubscribed) {
-      // They are subscribed — proceed
+      // confirmed subscribed — proceed
     } else {
       freeMessageCount++;
       localStorage.setItem('hw_free_count', freeMessageCount.toString());
-      if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
         showPaywall();
         return;
       }
     }
   } else {
-    // Not logged in — apply free limit
     freeMessageCount++;
     localStorage.setItem('hw_free_count', freeMessageCount.toString());
-    if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+    if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
     }
@@ -3476,36 +3481,35 @@ async function loadDashboardData() {
   if (!currentUser) return;
   
   try {
-    // Load sessions
     const { data: sessions } = await sbClient
-      .from('sessions')
-      .select('*')
+      .from('sessions').select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
 
-    // Load topic mastery
     const { data: mastery } = await sbClient
-      .from('topic_mastery')
-      .select('*')
+      .from('topic_mastery').select('*')
       .eq('user_id', currentUser.id)
       .order('mastery_percentage', { ascending: true });
 
-    // Load growth areas
     const { data: growthAreas } = await sbClient
-      .from('growth_areas')
-      .select('*')
+      .from('growth_areas').select('*')
       .eq('user_id', currentUser.id)
       .eq('resolved', false)
       .order('struggle_count', { ascending: false });
 
-    renderDashboard(sessions || [], mastery || [], growthAreas || []);
+    const { data: studyCards } = await sbClient
+      .from('study_cards').select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    renderDashboard(sessions || [], mastery || [], growthAreas || [], studyCards || []);
   } catch(e) {
     console.error('Dashboard load error:', e);
   }
 }
 
 // ── RENDER DASHBOARD ──
-function renderDashboard(sessions, mastery, growthAreas) {
+function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
   const totalSessions = sessions.length;
   const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
   const avgMastery = mastery.length > 0 
@@ -3601,6 +3605,47 @@ function renderDashboard(sessions, mastery, growthAreas) {
         </div>
       `).join('');
   }
+
+  // Render study cards
+  const studyCardsEl = document.getElementById('studyCardsList');
+  if (studyCardsEl) {
+    if (studyCards.length === 0) {
+      studyCardsEl.innerHTML = '<div class="no-growth" style="color:#0369a1;background:#e0f2fe;border-color:#bae6fd;">📖 No study cards yet — earn 5 stars in a session to unlock your first card!</div>';
+    } else {
+      studyCardsEl.innerHTML = studyCards.map(card => `
+        <div style="background:#fff;border:1.5px solid rgba(3,105,161,.1);border-radius:12px;padding:14px 16px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-family:'Fraunces',serif;font-size:13px;color:#0369a1;font-weight:700;">${card.topic}</div>
+            <div style="font-size:10px;color:#94a3b8;">${new Date(card.created_at).toLocaleDateString()}</div>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${card.subject} · ${card.grade || ''}</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            ${(card.concepts || []).map(c => `<div style="font-size:12px;color:#334155;padding:4px 0;border-bottom:1px solid rgba(3,105,161,.06);">• ${c}</div>`).join('')}
+          </div>
+          ${card.memory_tip ? `<div style="margin-top:8px;font-size:11px;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;">💡 ${card.memory_tip}</div>` : ''}
+        </div>
+      `).join('');
+    }
+  }
+
+  // Update parent weekly stats
+  const weekSessions = sessions.filter(s => {
+    const sessionDate = new Date(s.created_at);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return sessionDate > weekAgo;
+  });
+  const weekMinutes = weekSessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+  const weekAvgMastery = weekSessions.length > 0
+    ? Math.round(weekSessions.reduce((sum, s) => sum + (s.mastery_level || 0), 0) / weekSessions.length)
+    : 0;
+
+  const parentWeeklyEl = document.getElementById('parentWeeklyCount');
+  if (parentWeeklyEl) parentWeeklyEl.textContent = weekSessions.length + ' sessions';
+  const parentStudyEl = document.getElementById('parentStudyTime');
+  if (parentStudyEl) parentStudyEl.textContent = Math.round(weekMinutes / 60 * 10) / 10 + 'h';
+  const parentMasteryEl = document.getElementById('parentAvgMastery');
+  if (parentMasteryEl) parentMasteryEl.textContent = weekAvgMastery + '%';
 }
 
 // ── PRACTICE ZONE — Opens Ollie focused on specific topic ──
@@ -3608,15 +3653,34 @@ function startPracticeZone(subject, topic) {
   currentSubject = subject;
   resetSessionTracking();
   history = [];
-  const msgs = document.getElementById('cbMsgs');
-  if(msgs) msgs.innerHTML = '';
-  
-  const practiceMsg = `I need help practicing ${topic} in ${subject}`;
-  document.getElementById('cbInput').value = practiceMsg;
-  sendMsg();
-  
-  // Scroll to chat
-  document.querySelector('.chat-widget').scrollIntoView({ behavior: 'smooth' });
+
+  // Scroll to chat section
+  const chatSec = document.getElementById('tryit');
+  if (chatSec) chatSec.scrollIntoView({ behavior: 'smooth' });
+
+  // Set the subject and open workspace
+  const shortName = subject === 'Mathematics' ? 'Math' : subject === 'Reading & Literature' ? 'Reading' : subject === 'Writing, Grammar & Spelling' ? 'Writing' : subject;
+  const icons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+  const icon = icons[subject] || '📚';
+
+  setTimeout(() => {
+    // Show workspace directly
+    document.getElementById('gradeScreen') && (document.getElementById('gradeScreen').style.display = 'none');
+    document.getElementById('subjectScreen') && (document.getElementById('subjectScreen').style.display = 'none');
+    document.getElementById('selectionBottomBar') && (document.getElementById('selectionBottomBar').style.display = 'none');
+    document.getElementById('progressStepsBar') && (document.getElementById('progressStepsBar').style.display = 'none');
+    document.getElementById('ollieWorkspace') && (document.getElementById('ollieWorkspace').style.display = 'flex');
+    activateFullscreenWorkspace(subject, shortName, gradeLevel || 'Grade 7', icon);
+
+    // Pre-fill the practice message
+    setTimeout(() => {
+      const input = document.getElementById('cbInput');
+      if (input) {
+        input.value = `I need help practicing ${topic} in ${shortName}`;
+        sendMsg();
+      }
+    }, 500);
+  }, 600);
 }
 
 // ── SMART QUIZ ME — Pulls from Growth Areas ──
@@ -3963,19 +4027,140 @@ function exitFullscreenWorkspace() {
 // ── GAME UNLOCK AT 5 STARS ──
 let sessionStarCount = 0;
 const subjectGames = {
-  'Mathematics': { name: 'Fraction Pizza', icon: '🍕', desc: 'Ollie will quiz you on exactly what you just practiced — one question at a time!' },
-  'Reading & Literature': { name: 'Detective Story', icon: '🔍', desc: 'Use the clues from what you just read to solve the mystery!' },
-  'Writing, Grammar & Spelling': { name: 'Sentence Builder', icon: '✍️', desc: 'Drag and drop words to build the perfect sentence from what you just learned!' },
-  'Science': { name: 'Lab Challenge', icon: '🔬', desc: 'Apply what you just learned about science in a hands-on lab challenge!' },
-  'Social Studies': { name: 'History Sorter', icon: '🌍', desc: 'Sort the events and concepts from what you just studied!' }
+  'Mathematics': { name: 'Math Practice Quiz', icon: '✏️', desc: 'Ollie will quiz you on exactly what you just practiced — one question at a time with multiple choice answers!' },
+  'Reading & Literature': { name: 'Reading Practice Quiz', icon: '📖', desc: 'Test your comprehension on what you just read with guided questions from Ollie!' },
+  'Writing, Grammar & Spelling': { name: 'Writing Practice Quiz', icon: '✍️', desc: 'Practice the writing concepts you just learned with Ollie guiding you through each question!' },
+  'Science': { name: 'Science Practice Quiz', icon: '🔬', desc: 'Quiz yourself on the science concepts you just covered with Ollie!' },
+  'Social Studies': { name: 'Social Studies Practice Quiz', icon: '🌍', desc: 'Test your knowledge of what you just studied in social studies!' }
 };
 
 function checkGameUnlock() {
   sessionStarCount++;
   if (sessionStarCount >= 5) {
-    const game = subjectGames[currentSubject] || { name: 'Quiz Challenge', icon: '🎯', desc: 'Test what you just learned with Ollie!' };
-    showGameUnlockCard(game);
+    generateStudyCard();
     sessionStarCount = 0;
+  }
+}
+
+async function generateStudyCard() {
+  const detected = detectTopicFromHistory();
+  const topic = detected.topic || currentSubject;
+  const grade = gradeLevel || 'Grade 7';
+
+  // Ask Ollie to generate study card content
+  const cardPrompt = `[STUDY CARD GENERATION — INTERNAL]
+Based on our session, generate a study card for the student. Respond ONLY with a JSON object in this exact format, nothing else:
+{
+  "topic": "${topic}",
+  "subject": "${detected.subject || currentSubject}",
+  "concepts": ["concept 1 in one clear sentence", "concept 2 in one clear sentence", "concept 3 in one clear sentence"],
+  "memoryTip": "one simple memorable analogy or trick from our session"
+}`;
+
+  try {
+    const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'You generate study cards as JSON only. No prose. No explanation. Only valid JSON.',
+        messages: [{ role: 'user', content: cardPrompt }],
+        grade: grade,
+        subject: detected.subject || currentSubject
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const card = JSON.parse(clean);
+    showStudyCard(card, grade);
+  } catch(e) {
+    // Fallback card if generation fails
+    showStudyCard({
+      topic: topic,
+      subject: detected.subject || currentSubject,
+      concepts: [
+        'Review your notes from this session to reinforce what you learned.',
+        'Practice similar problems to build confidence.',
+        'Ask your teacher if you need more help with this topic.'
+      ],
+      memoryTip: 'Break complex problems into smaller steps — one step at a time!'
+    }, grade);
+  }
+}
+
+function showStudyCard(card, grade) {
+  const msgs = document.getElementById('cbMsgs');
+  if (!msgs) return;
+
+  const cardEl = document.createElement('div');
+  cardEl.style.cssText = 'width:100%;max-width:520px;align-self:center;animation:slideUp .4s ease;margin:8px 0;';
+  cardEl.innerHTML = `
+    <div style="background:#fff;border:1.5px solid rgba(3,105,161,.15);border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(3,105,161,.08);">
+      <div style="background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;">⭐</div>
+          <div>
+            <div style="font-family:'Fraunces',serif;font-size:13px;color:#fff;font-weight:600;">5 stars earned — Study Card unlocked!</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.75);">Save this to review before your next test</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.15);border-radius:50px;padding:3px 10px;font-size:11px;color:#fff;font-weight:500;">${card.subject} · ${grade}</div>
+      </div>
+      <div style="padding:16px 18px;">
+        <div style="font-family:'Fraunces',serif;font-size:16px;color:#0369a1;font-weight:700;margin-bottom:3px;">${card.topic}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px;">Session completed · ${new Date().toLocaleDateString()}</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:8px;">Key concepts from this session</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+          ${card.concepts.map((c, i) => `
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 12px;background:#f0f9ff;border-radius:10px;border:1px solid rgba(3,105,161,.08);">
+              <div style="width:20px;height:20px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0369a1;flex-shrink:0;margin-top:1px;">${i+1}</div>
+              <div style="font-size:12.5px;color:#334155;line-height:1.55;">${c}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:3px;">Memory tip from Ollie</div>
+          <div style="font-size:12.5px;color:#166534;line-height:1.55;">${card.memoryTip}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="saveStudyCard(${JSON.stringify(card).replace(/"/g, '&quot;')}, '${grade}', this)" style="flex:1;padding:9px;background:#0369a1;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Save to my cards</button>
+          <button onclick="this.closest('div').parentElement.parentElement.remove()" style="padding:9px 14px;background:#f0f9ff;color:#0369a1;border:1px solid rgba(3,105,161,.2);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Dismiss</button>
+        </div>
+      </div>
+    </div>
+  `;
+  msgs.appendChild(cardEl);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function saveStudyCard(card, grade, btn) {
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  if (currentUser) {
+    try {
+      await sbClient.from('study_cards').insert({
+        user_id: currentUser.id,
+        subject: card.subject,
+        topic: card.topic,
+        concepts: card.concepts,
+        memory_tip: card.memoryTip,
+        grade: grade,
+        created_at: new Date().toISOString()
+      });
+      btn.textContent = '✅ Saved!';
+      btn.style.background = '#10b981';
+      // Refresh dashboard if visible
+      if (document.getElementById('dashboardSection').style.display !== 'none') {
+        loadDashboardData();
+      }
+    } catch(e) {
+      btn.textContent = 'Save to my cards';
+      btn.disabled = false;
+    }
+  } else {
+    btn.textContent = 'Log in to save';
+    btn.style.background = '#f59e0b';
   }
 }
 
@@ -3986,9 +4171,9 @@ function showGameUnlockCard(game) {
   card.className = 'game-unlock-card';
   card.innerHTML = `
     <div style="font-size:40px;margin-bottom:12px;">${game.icon}</div>
-    <div class="game-unlock-title">🎉 You earned 5 stars! Your game is unlocked!</div>
+    <div class="game-unlock-title">🎉 You earned 5 stars! Practice Quiz Unlocked!</div>
     <div class="game-unlock-sub">${game.name} — ${game.desc}</div>
-    <button class="game-unlock-btn" onclick="launchGame('${currentSubject}')">Play ${game.name} Now →</button>
+    <button class="game-unlock-btn" onclick="launchGame('${currentSubject}')">Start ${game.name} →</button>
     <button class="game-skip-btn" onclick="this.parentElement.remove()">Skip for now — keep practicing with Ollie</button>
   `;
   msgs.appendChild(card);
@@ -4024,9 +4209,24 @@ function switchDashTab(tab, btn) {
 // ── SHOW DASHBOARD FOR LOGGED IN SUBSCRIBED USERS ──
 function showDashboard() {
   const dashSection = document.getElementById('dashboardSection');
-  if (dashSection && currentUser && isSubscribed) {
+  if (dashSection && currentUser) {
     dashSection.style.display = 'block';
     loadDashboardData();
+    // Add dashboard button to fullscreen nav
+    const fsNav = document.querySelector('.fs-nav-right');
+    if (fsNav && !document.getElementById('fsDashBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'fsDashBtn';
+      btn.textContent = '📊 Progress';
+      btn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:5px 14px;font-size:.72rem;color:#fff;cursor:pointer;font-family:DM Sans,sans-serif;font-weight:600;';
+      btn.onclick = () => {
+        exitFullscreenWorkspace();
+        setTimeout(() => {
+          document.getElementById('dashboardSection').scrollIntoView({behavior:'smooth'});
+        }, 300);
+      };
+      fsNav.appendChild(btn);
+    }
   }
 }
 
@@ -4096,7 +4296,7 @@ async function initAuth() {
   } else {
     if (paymentSuccess) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
-    } else if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+    } else if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
     }
   }
@@ -4220,32 +4420,41 @@ function openAuthModal() {
 function openLoginModal() { openAuthModal(); }
 function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
 let quizModeActive = false;
+let quizScore = 0;
+let quizTotal = 5;
+let quizCurrent = 0;
 
 function startQuizMode() {
-  // Check if grade and subject are selected
   const grade = gradeLevel;
   const subject = currentSubject;
-
   quizModeActive = true;
+  quizScore = 0;
+  quizTotal = 5;
+  quizCurrent = 0;
 
-  // Show quiz mode indicator
-  const quizBtn = document.getElementById('quizMeBtn');
-  if (quizBtn) {
-    quizBtn.style.background = '#fbbf24';
-    quizBtn.textContent = '🎯 Quiz Active!';
-  }
+  const detected = detectTopicFromHistory();
+  const topic = detected.topic || subject;
 
-  // Build quiz prompt based on conversation context
   let quizPrompt = '';
   if (history.length > 2) {
-    // Already in a conversation — quiz on what was discussed
-    quizPrompt = `[QUIZ MODE ACTIVATED] The student wants to be quizzed on what we just covered. Start the quiz immediately — ask your first question based on the topics we discussed in this session. Grade level: ${grade}. Subject: ${subject}. Ask ONE question only and wait for the answer.`;
+    quizPrompt = `[QUIZ MODE — SCORED PRACTICE TEST]
+The student just finished studying ${topic} in ${subject} at ${grade} level and wants to test themselves.
+
+Run a 5-question scored practice test on ${topic}. Follow these exact rules:
+1. Ask ONE question at a time
+2. Give 4 multiple choice options labeled A B C D
+3. Wait for student answer
+4. Tell them if they got it RIGHT or WRONG with a brief explanation
+5. Keep track with "Question X of 5"
+6. After question 5 give them a final score like "You scored 4 out of 5!"
+7. For wrong answers explain the correct answer clearly
+
+Start with Question 1 of 5 now. Make questions appropriate for ${grade} level.`;
   } else {
-    // No conversation yet — ask what topic
-    quizPrompt = `[QUIZ MODE ACTIVATED] The student wants to be quizzed but we have not covered any topic yet. Ask them what specific topic they would like to be quizzed on in ${subject} at ${grade} level.`;
+    quizPrompt = `[QUIZ MODE — SCORED PRACTICE TEST]
+The student wants to be quizzed on ${subject} at ${grade} level. Ask them what specific topic they want to be tested on, then run a 5-question scored multiple choice quiz.`;
   }
 
-  // Send quiz activation message
   history.push({ role: 'user', content: quizPrompt });
   sendMsgToOllie();
 }
@@ -4657,7 +4866,25 @@ function awardStar() {
     playSuccessSound();
     showCelebration();
     checkGameUnlock();
+    // Update session mastery display
+    updateSessionMastery();
   } catch(e) { console.log('Star system:', e.message); }
+}
+
+function updateSessionMastery() {
+  try {
+    const masteryPct = Math.min(100, Math.round((starCount / 10) * 100));
+    const fill = document.getElementById('fsMasteryFill');
+    const pct = document.getElementById('fsMasteryPct');
+    if (fill) fill.style.width = masteryPct + '%';
+    if (pct) pct.textContent = masteryPct + '%';
+    // Also update color based on level
+    if (fill) {
+      if (masteryPct >= 80) fill.style.background = 'linear-gradient(90deg,#10b981,#34d399)';
+      else if (masteryPct >= 50) fill.style.background = 'linear-gradient(90deg,#0369a1,#0ea5e9)';
+      else fill.style.background = 'linear-gradient(90deg,#f59e0b,#fbbf24)';
+    }
+  } catch(e) { console.log('Mastery update:', e.message); }
 }
 
 function updateProgress() {
