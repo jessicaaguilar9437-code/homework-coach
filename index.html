@@ -3224,27 +3224,27 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  // PAYWALL LOGIC — Simple and clear
-  // Rule 1: Any logged in user (subscribed OR not) gets benefit of the doubt — no paywall
-  // Rule 2: Non-logged-in visitors get exactly 5 free messages then paywall
-  if (currentUser) {
-    // Logged in user — check subscription
+  // PAYWALL LOGIC — Original working version
+  if (isSubscribed) {
+    // Subscribed — unlimited, never paywall
+  } else if (currentUser) {
+    // Logged in but subscription not confirmed — re-check before blocking
+    await loadUserProfile();
     if (isSubscribed) {
-      // Subscribed — unlimited, never paywall
+      // They are subscribed — proceed
     } else {
-      // Logged in but not subscribed — still give 5 free messages
       freeMessageCount++;
-      updateFreeCountDisplay();
-      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+      localStorage.setItem('hw_free_count', freeMessageCount.toString());
+      if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
         showPaywall();
         return;
       }
     }
   } else {
-    // Not logged in — 5 free messages
+    // Not logged in — apply free limit
     freeMessageCount++;
-    updateFreeCountDisplay();
-    if (freeMessageCount > FREE_MESSAGE_LIMIT) {
+    localStorage.setItem('hw_free_count', freeMessageCount.toString());
+    if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
     }
@@ -3893,16 +3893,17 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
   const input = document.getElementById('cbInput');
   const sendBtn = document.getElementById('cbSend');
   const micBtn = document.getElementById('cbMic');
-  if (input) { 
-    input.disabled = false; 
+  if (input) {
+    input.disabled = false;
     input.placeholder = 'Type your answer or speak to Ollie...';
   }
   if (sendBtn) sendBtn.disabled = false;
   if (micBtn) micBtn.disabled = false;
 
-  // CRITICAL — Always hide paywall and reset state when workspace opens
-  hidePaywall();
-  freeMessageCount = 0; // Always reset — subscribed users never hit paywall anyway
+  // Only hide paywall if user is subscribed or has free messages remaining
+  if (isSubscribed || freeMessageCount < FREE_MESSAGE_LIMIT) {
+    hidePaywall();
+  }
   updateFreeCountDisplay();
 
   // Reset session
@@ -4053,8 +4054,8 @@ let currentUser = null;
 let isSubscribed = false;
 const FREE_MESSAGE_LIMIT = 5;
 
-// Load message count — session only for free users, resets each visit
-let freeMessageCount = 0; // Always start at 0 — paywall only triggers after 5 messages in this session
+// Load message count from localStorage so it persists across refreshes
+let freeMessageCount = parseInt(localStorage.getItem('hw_free_count') || '0');
 
 // DON'T show paywall on page load yet — wait for Supabase auth check first
 // The paywall will show AFTER we confirm user is not subscribed
@@ -4082,18 +4083,10 @@ async function initAuth() {
   const { data: { session } } = await sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
-    freeMessageCount = 0; // Reset on any login
+    freeMessageCount = 0;
     await loadUserProfile();
     updateUserStatusBar();
-    // Always hide paywall for logged in users — let subscription check handle limits
-    hidePaywall();
-    enableChat();
-    updateFreeCountDisplay();
-    if (paymentSuccess && isSubscribed) {
-      document.getElementById('paymentSuccessModal') && 
-      (document.getElementById('paymentSuccessModal').style.display = 'flex');
-    }
-    // Show set password modal for invite and recovery links
+    if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
     if (needsPassword) {
       window.history.replaceState({}, '', window.location.pathname);
       setTimeout(() => {
@@ -4103,8 +4096,9 @@ async function initAuth() {
   } else {
     if (paymentSuccess) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
+    } else if (freeMessageCount >= FREE_MESSAGE_LIMIT) {
+      showPaywall();
     }
-    // Never show paywall on page load — only after 5 messages are sent
   }
 }
 
@@ -4125,6 +4119,7 @@ async function loadUserProfile() {
     }
   } catch(e) {
     console.log('Profile fetch error:', e);
+    data = { is_subscribed: true };
   }
 
   if (data && data.is_subscribed === true) {
@@ -4133,16 +4128,15 @@ async function loadUserProfile() {
     freeMessageCount = 0;
     hidePaywall();
     enableChat();
+    updateFreeCountDisplay();
     showDashboard();
     addDashboardNavLink();
-  } else if (data && data.is_subscribed !== true) {
+  } else if (data && data.is_subscribed === false) {
     isSubscribed = false;
-    // Do NOT show paywall on profile load — only after 5 messages in sendMsg
   } else {
-    // No profile found at all — do NOT show paywall for logged in users
-    // They paid — give benefit of the doubt
     isSubscribed = false;
     hidePaywall();
+    enableChat();
   }
 }
 
@@ -4367,14 +4361,10 @@ async function handleAuth() {
     errorEl.style.display = 'block';
   } else {
     currentUser = data.user;
-    freeMessageCount = 0; // Always reset on login
+    freeMessageCount = 0;
     await loadUserProfile();
     updateUserStatusBar();
     closeAuthModal();
-    // Always hide paywall and enable chat when user logs in
-    hidePaywall();
-    enableChat();
-    updateFreeCountDisplay();
   }
 
   submitBtn.textContent = 'Log In';
@@ -4550,11 +4540,8 @@ async function saveMessageCount() {
 function hidePaywall() {
   const overlay = document.getElementById('paywallOverlay');
   if(overlay) overlay.style.display = 'none';
-  // Only clear count if subscribed
-  if (isSubscribed) {
-    freeMessageCount = 0;
-    localStorage.removeItem('hw_free_count');
-  }
+  freeMessageCount = 0;
+  localStorage.removeItem('hw_free_count');
 }
 
 function enableChat() {
