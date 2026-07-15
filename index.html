@@ -1121,7 +1121,7 @@ body.logged-in #tryit {
     <div class="s-label" id="chatSectionLabel">Try It Yourself</div>
     <div class="s-title" id="chatSectionTitle">See Exactly How Ollie Teaches Your Child</div>
     <p class="s-sub" id="chatSectionSub">Select your grade, choose a subject, and experience step-by-step academic guidance firsthand.</p>
-    <div style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:50px;padding:6px 16px;font-size:.78rem;font-weight:700;color:#166534;margin-top:8px;">🎉 5 free messages — no credit card required</div>
+    <div id="freeBadge" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:50px;padding:6px 16px;font-size:.78rem;font-weight:700;color:#166534;margin-top:8px;">🎉 5 free messages — no credit card required</div>
   </div>
 
   <div class="chatbot-wrap">
@@ -1343,7 +1343,7 @@ body.logged-in #tryit {
                 <span style="font-size:.75rem;font-weight:800;color:#92400e;margin-left:4px;font-family:'DM Sans',sans-serif;" id="starCount">0</span>
                 <span id="streakDisplay" style="display:none;font-size:.72rem;font-weight:800;color:#c2410c;font-family:'DM Sans',sans-serif;margin-left:6px;"></span>
               </div>
-              <div style="margin-top:6px;font-family:'DM Sans',sans-serif;font-size:.68rem;color:#94a3b8;">Earn 5 stars to unlock your subject game 🎮</div>
+              <div style="margin-top:6px;font-family:'DM Sans',sans-serif;font-size:.68rem;color:#94a3b8;">Earn 5 stars to unlock your Study Card 📖</div>
             </div>
 
             <div>
@@ -3306,9 +3306,14 @@ async function sendMsg() {
         sessionStruggleCount = (sessionStruggleCount || 0) + 1;
       }
       
-      // Auto-save session every 5 messages if user is logged in
-      if (currentUser && sessionMessageCount % 5 === 0) {
+      // Save session after every Ollie response if user is logged in
+      if (currentUser) {
         await saveSessionData();
+        // Refresh dashboard if it is visible
+        const dashSection = document.getElementById('dashboardSection');
+        if (dashSection && dashSection.style.display !== 'none') {
+          loadDashboardData();
+        }
       }
       
       break;
@@ -3912,7 +3917,7 @@ function backToSelection() {
 }
 
 function updateFreeCountDisplay() {
-  const remaining = Math.max(0, FREE_MESSAGE_LIMIT - freeMessageCount + 1);
+  const remaining = Math.max(0, FREE_MESSAGE_LIMIT - freeMessageCount);
   const els = [document.getElementById('wsFreeCount'), document.getElementById('fsMsgsLeft'), document.getElementById('fsMsgsLeftBottom')];
   els.forEach(el => {
     if (!el) return;
@@ -4211,8 +4216,18 @@ function showDashboard() {
   const dashSection = document.getElementById('dashboardSection');
   if (dashSection && currentUser) {
     dashSection.style.display = 'block';
+    // Show immediately with zeros
+    const statsEl = document.getElementById('dashboardStats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <div class="dash-stat"><div class="dash-stat-num">0</div><div class="dash-stat-label">Sessions</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">0h</div><div class="dash-stat-label">Study Time</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">0%</div><div class="dash-stat-label">Avg Mastery</div></div>
+      `;
+    }
+    // Then load real data
     loadDashboardData();
-    // Add dashboard button to fullscreen nav
+    // Add progress button to fullscreen nav
     const fsNav = document.querySelector('.fs-nav-right');
     if (fsNav && !document.getElementById('fsDashBtn')) {
       const btn = document.createElement('button');
@@ -4222,8 +4237,9 @@ function showDashboard() {
       btn.onclick = () => {
         exitFullscreenWorkspace();
         setTimeout(() => {
-          document.getElementById('dashboardSection').scrollIntoView({behavior:'smooth'});
-        }, 300);
+          const dash = document.getElementById('dashboardSection');
+          if (dash) dash.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
       };
       fsNav.appendChild(btn);
     }
@@ -4333,10 +4349,14 @@ async function loadUserProfile() {
     addDashboardNavLink();
   } else if (data && data.is_subscribed === false) {
     isSubscribed = false;
+    showDashboard();
+    addDashboardNavLink();
   } else {
     isSubscribed = false;
     hidePaywall();
     enableChat();
+    showDashboard();
+    addDashboardNavLink();
   }
 }
 
@@ -4365,6 +4385,10 @@ function updateUserStatusBar() {
     // Hide Try Ollie Free nav link
     const navTryOllie = document.querySelector('.nav-try-ollie');
     if (navTryOllie) navTryOllie.parentElement.style.display = 'none';
+
+    // Hide free trial badge when logged in
+    const freeBadge = document.getElementById('freeBadge');
+    if (freeBadge) freeBadge.style.display = 'none';
 
     // Hide floating button
     const floatingBtn = document.getElementById('floatingOllieBtn');
@@ -4873,15 +4897,14 @@ function awardStar() {
 
 function updateSessionMastery() {
   try {
-    const masteryPct = Math.min(100, Math.round((starCount / 10) * 100));
+    const masteryPct = Math.min(100, Math.round((starCount / 5) * 100));
     const fill = document.getElementById('fsMasteryFill');
     const pct = document.getElementById('fsMasteryPct');
     if (fill) fill.style.width = masteryPct + '%';
     if (pct) pct.textContent = masteryPct + '%';
-    // Also update color based on level
     if (fill) {
       if (masteryPct >= 80) fill.style.background = 'linear-gradient(90deg,#10b981,#34d399)';
-      else if (masteryPct >= 50) fill.style.background = 'linear-gradient(90deg,#0369a1,#0ea5e9)';
+      else if (masteryPct >= 40) fill.style.background = 'linear-gradient(90deg,#0369a1,#0ea5e9)';
       else fill.style.background = 'linear-gradient(90deg,#f59e0b,#fbbf24)';
     }
   } catch(e) { console.log('Mastery update:', e.message); }
