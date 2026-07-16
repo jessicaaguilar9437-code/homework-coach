@@ -798,6 +798,7 @@ body.logged-in #tryit {
     <li><a href="#safety">For Parents</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#tryit" class="nav-try-ollie"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:22px;height:22px;border-radius:50%;object-fit:cover;object-position:center top;vertical-align:middle;margin-right:4px;"> Try Ollie Free</a></li>
+    <li id="navProgressBtn" style="display:none;"><a href="#" onclick="showProgressView();return false;" style="color:#0369a1;font-weight:700;">📊 My Progress</a></li>
     <li><a href="#" onclick="openLoginModal();return false;" class="nav-login" id="navLoginBtn">Log In</a></li>
     <li class="nav-user-badge" id="navUserBadge">
       <span>✅</span>
@@ -3241,6 +3242,7 @@ async function sendMsg() {
     } else {
       freeMessageCount++;
       localStorage.setItem('hw_free_count', freeMessageCount.toString());
+      updateFreeCountDisplay();
       if (freeMessageCount > FREE_MESSAGE_LIMIT) {
         showPaywall();
         return;
@@ -3249,6 +3251,7 @@ async function sendMsg() {
   } else {
     freeMessageCount++;
     localStorage.setItem('hw_free_count', freeMessageCount.toString());
+    updateFreeCountDisplay();
     if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
       return;
@@ -3958,21 +3961,18 @@ function activateFullscreenWorkspace(subjectVal, subjectLabel, gradeLabel, icon)
   const mastLabel = document.getElementById('fsMasteryLabel');
   if (mastLabel) mastLabel.textContent = subjectLabel + ' mastery';
 
-  // CRITICAL — Always reset input to enabled state when workspace opens
+  // CRITICAL — Always reset input and paywall for new session
   const input = document.getElementById('cbInput');
   const sendBtn = document.getElementById('cbSend');
   const micBtn = document.getElementById('cbMic');
-  if (input) {
-    input.disabled = false;
-    input.placeholder = 'Type your answer or speak to Ollie...';
-  }
+  if (input) { input.disabled = false; input.placeholder = 'Type your answer or speak to Ollie...'; }
   if (sendBtn) sendBtn.disabled = false;
   if (micBtn) micBtn.disabled = false;
 
-  // Only hide paywall if user is subscribed or has free messages remaining
-  if (isSubscribed || freeMessageCount < FREE_MESSAGE_LIMIT) {
-    hidePaywall();
-  }
+  // Reset free message count for each new session
+  freeMessageCount = 0;
+  localStorage.setItem('hw_free_count', '0');
+  hidePaywall();
   updateFreeCountDisplay();
 
   // Reset session
@@ -4212,11 +4212,31 @@ function switchDashTab(tab, btn) {
 }
 
 // ── SHOW DASHBOARD FOR LOGGED IN SUBSCRIBED USERS ──
+function showProgressView() {
+  // Exit fullscreen if open
+  const chatbotWrap = document.querySelector('.chatbot-wrap');
+  if (chatbotWrap && chatbotWrap.classList.contains('fullscreen')) {
+    exitFullscreenWorkspace();
+  }
+  // Show dashboard and scroll to it
+  const dashSection = document.getElementById('dashboardSection');
+  if (dashSection) {
+    dashSection.style.display = 'block';
+    loadDashboardData();
+    setTimeout(() => {
+      dashSection.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+  }
+}
+
 function showDashboard() {
   const dashSection = document.getElementById('dashboardSection');
   if (dashSection && currentUser) {
     dashSection.style.display = 'block';
-    // Show immediately with zeros
+    // Show My Progress nav link
+    const navProgress = document.getElementById('navProgressBtn');
+    if (navProgress) navProgress.style.display = 'block';
+    // Show zeros immediately
     const statsEl = document.getElementById('dashboardStats');
     if (statsEl) {
       statsEl.innerHTML = `
@@ -4225,7 +4245,7 @@ function showDashboard() {
         <div class="dash-stat"><div class="dash-stat-num">0%</div><div class="dash-stat-label">Avg Mastery</div></div>
       `;
     }
-    // Then load real data
+    // Load real data
     loadDashboardData();
     // Add progress button to fullscreen nav
     const fsNav = document.querySelector('.fs-nav-right');
@@ -4234,13 +4254,7 @@ function showDashboard() {
       btn.id = 'fsDashBtn';
       btn.textContent = '📊 Progress';
       btn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:5px 14px;font-size:.72rem;color:#fff;cursor:pointer;font-family:DM Sans,sans-serif;font-weight:600;';
-      btn.onclick = () => {
-        exitFullscreenWorkspace();
-        setTimeout(() => {
-          const dash = document.getElementById('dashboardSection');
-          if (dash) dash.scrollIntoView({ behavior: 'smooth' });
-        }, 400);
-      };
+      btn.onclick = () => showProgressView();
       fsNav.appendChild(btn);
     }
   }
@@ -4686,8 +4700,13 @@ async function handleLogout() {
   isSubscribed = false;
   freeMessageCount = 0;
   localStorage.removeItem('hw_free_count');
+  // Hide progress nav
+  const navProgress = document.getElementById('navProgressBtn');
+  if (navProgress) navProgress.style.display = 'none';
+  // Hide dashboard
+  const dash = document.getElementById('dashboardSection');
+  if (dash) dash.style.display = 'none';
   updateUserStatusBar();
-  // Reload page so marketing site shows again
   window.location.reload();
 }
 
