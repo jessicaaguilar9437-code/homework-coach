@@ -3235,16 +3235,13 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  // PAYWALL LOGIC — Original working version
+  // PAYWALL LOGIC — server-side fingerprint tracking prevents cookie/refresh bypass
   if (isSubscribed) {
     // Subscribed — unlimited, never paywall
   } else if (currentUser) {
     await loadUserProfile();
-    if (isSubscribed) {
-      // confirmed subscribed — proceed
-    } else {
+    if (!isSubscribed) {
       freeMessageCount++;
-      localStorage.setItem('hw_free_count', freeMessageCount.toString());
       updateFreeCountDisplay();
       if (freeMessageCount > FREE_MESSAGE_LIMIT) {
         showPaywall();
@@ -3252,8 +3249,8 @@ async function sendMsg() {
       }
     }
   } else {
+    // Non-logged-in: client counter for UX only — server enforces via fingerprint
     freeMessageCount++;
-    localStorage.setItem('hw_free_count', freeMessageCount.toString());
     updateFreeCountDisplay();
     if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
@@ -3286,12 +3283,22 @@ async function sendMsg() {
           system: getSystemPrompt(),
           messages: history,
           grade: gradeLevel,
-          subject: currentSubject
+          subject: currentSubject,
+          fingerprint: visitorFingerprint,
+          subscribed: isSubscribed
         })
       });
       clearTimeout(timeout);
       const data = await res.json();
       removeTyping();
+
+      // Server-side limit reached — show paywall even if cookies were cleared
+      if (res.status === 429 || data?.error === 'limit_reached') {
+        freeMessageCount = FREE_MESSAGE_LIMIT + 1;
+        showPaywall();
+        break;
+      }
+
       const reply = data?.content?.[0]?.text || null;
       if (!reply) {
         if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
@@ -3300,7 +3307,7 @@ async function sendMsg() {
       }
       history.push({ role: 'assistant', content: reply });
       appendMsg('bot', reply);
-      
+
       // ── SESSION TRACKING ──
       sessionMessageCount = (sessionMessageCount || 0) + 1;
       
