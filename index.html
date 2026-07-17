@@ -1515,9 +1515,9 @@ body.logged-in #tryit {
 
       <!-- Stats Row -->
       <div id="dashboardStats" class="dash-stats-grid">
-        <div class="dash-stat"><div class="dash-stat-num">0</div><div class="dash-stat-label">Sessions</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">0</div><div class="dash-stat-label">Sessions Completed</div></div>
         <div class="dash-stat"><div class="dash-stat-num">0h</div><div class="dash-stat-label">Study Time</div></div>
-        <div class="dash-stat"><div class="dash-stat-num">0%</div><div class="dash-stat-label">Avg Mastery</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">0%</div><div class="dash-stat-label">Average Mastery</div></div>
       </div>
 
       <!-- Subject Mastery Path -->
@@ -3531,9 +3531,9 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
   const statsEl = document.getElementById('dashboardStats');
   if (statsEl) {
     statsEl.innerHTML = `
-      <div class="dash-stat"><div class="dash-stat-num">${totalSessions}</div><div class="dash-stat-label">Sessions</div></div>
+      <div class="dash-stat"><div class="dash-stat-num">${totalSessions}</div><div class="dash-stat-label">Sessions Completed</div></div>
       <div class="dash-stat"><div class="dash-stat-num">${Math.round(totalMinutes/60*10)/10}h</div><div class="dash-stat-label">Study Time</div></div>
-      <div class="dash-stat"><div class="dash-stat-num">${avgMastery}%</div><div class="dash-stat-label">Avg Mastery</div></div>
+      <div class="dash-stat"><div class="dash-stat-num">${avgMastery}%</div><div class="dash-stat-label">Average Mastery</div></div>
     `;
   }
 
@@ -3657,6 +3657,42 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
   if (parentStudyEl) parentStudyEl.textContent = Math.round(weekMinutes / 60 * 10) / 10 + 'h';
   const parentMasteryEl = document.getElementById('parentAvgMastery');
   if (parentMasteryEl) parentMasteryEl.textContent = weekAvgMastery + '%';
+
+  // Render level up topics — subjects with mastery between 60-79% are close to leveling up
+  const levelUpEl = document.getElementById('levelUpTopics');
+  if (levelUpEl) {
+    const levelUpSubjects = mastery.filter(m => m.mastery_percentage >= 60 && m.mastery_percentage < 80);
+    const subjectIcons2 = {'Math':'✏️','Mathematics':'✏️','Reading':'📖','Reading & Literature':'📖','Writing':'✍️','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+    if (levelUpSubjects.length === 0) {
+      levelUpEl.innerHTML = '<div class="no-growth">🚀 Keep studying to unlock Level Up Topics!</div>';
+    } else {
+      levelUpEl.innerHTML = levelUpSubjects.map(m => `
+        <div class="growth-card">
+          <div class="growth-icon">${subjectIcons2[m.subject] || '📚'}</div>
+          <div class="growth-info">
+            <div class="growth-title">${m.topic}</div>
+            <div class="growth-sub" style="color:#0369a1">${m.subject} · ${m.mastery_percentage}% mastery — almost there!</div>
+          </div>
+          <button class="practice-zone-btn" onclick="startPracticeZone('${m.subject}', '${m.topic}')">Level Up</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Render smart quiz growth area topics
+  const smartQuizTopicsEl = document.getElementById('smartQuizTopics');
+  if (smartQuizTopicsEl) {
+    if (growthAreas.length === 0) {
+      smartQuizTopicsEl.innerHTML = '<div class="dash-loading">Keep studying with Ollie — your Growth Areas will appear here!</div>';
+    } else {
+      smartQuizTopicsEl.innerHTML = growthAreas.slice(0, 4).map(ga => `
+        <div class="smart-quiz-topic">
+          <div class="smart-quiz-topic-name">${subjectIcons[ga.subject] || '📚'} ${ga.topic}</div>
+          <div class="smart-quiz-topic-tag">Struggled ${ga.struggle_count}x</div>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 // ── PRACTICE ZONE — Opens Ollie focused on specific topic ──
@@ -4110,7 +4146,7 @@ function showStudyCard(card, grade) {
     <div style="background:#fff;border:1.5px solid rgba(3,105,161,.15);border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(3,105,161,.08);">
       <div style="background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;">⭐</div>
+          <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" style="width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:center top;border:2px solid rgba(255,255,255,.3);" alt="Ollie">
           <div>
             <div style="font-family:'Fraunces',serif;font-size:13px;color:#fff;font-weight:600;">5 stars earned — Study Card unlocked!</div>
             <div style="font-size:11px;color:rgba(255,255,255,.75);">Save this to review before your next test</div>
@@ -4121,7 +4157,7 @@ function showStudyCard(card, grade) {
       <div style="padding:16px 18px;">
         <div style="font-family:'Fraunces',serif;font-size:16px;color:#0369a1;font-weight:700;margin-bottom:3px;">${card.topic}</div>
         <div style="font-size:11px;color:#94a3b8;margin-bottom:14px;">Session completed · ${new Date().toLocaleDateString()}</div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:8px;">Key concepts from this session</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:8px;">KEY CONCEPTS FROM THIS SESSION</div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
           ${card.concepts.map((c, i) => `
             <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 12px;background:#f0f9ff;border-radius:10px;border:1px solid rgba(3,105,161,.08);">
@@ -4131,7 +4167,7 @@ function showStudyCard(card, grade) {
           `).join('')}
         </div>
         <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:10px;padding:10px 12px;margin-bottom:14px;">
-          <div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:3px;">Memory tip from Ollie</div>
+          <div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:3px;">💡 Memory tip from Ollie</div>
           <div style="font-size:12.5px;color:#166534;line-height:1.55;">${card.memoryTip}</div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -4293,6 +4329,7 @@ const FREE_MESSAGE_LIMIT = 5;
 
 // Load message count from localStorage so it persists across refreshes
 let freeMessageCount = parseInt(localStorage.getItem('hw_free_count') || '0');
+let visitorFingerprint = null;
 
 // DON'T show paywall on page load yet — wait for Supabase auth check first
 // The paywall will show AFTER we confirm user is not subscribed
@@ -4531,12 +4568,19 @@ async function sendMsgToOllie() {
           system: getSystemPrompt(),
           messages: history,
           grade: gradeLevel,
-          subject: currentSubject
+          subject: currentSubject,
+          fingerprint: visitorFingerprint,
+          subscribed: isSubscribed
         })
       });
       clearTimeout(timeout);
       const data = await res.json();
       removeTyping();
+      if (res.status === 429 || data?.error === 'limit_reached') {
+        freeMessageCount = FREE_MESSAGE_LIMIT + 1;
+        showPaywall();
+        break;
+      }
       const reply = data?.content?.[0]?.text || null;
       if (!reply) {
         if (attempts < maxAttempts) { await new Promise(r => setTimeout(r, 1000)); continue; }
@@ -4820,8 +4864,34 @@ function enableChat() {
   if(micBtn) micBtn.disabled = false;
 }
 
+// Generate stable browser fingerprint — persists even when cookies/localStorage are cleared
+function generateFingerprint() {
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+    navigator.hardwareConcurrency || '',
+    navigator.deviceMemory || '',
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  ];
+  try {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.font = '14px Arial';
+    ctx.fillText('HWCoach', 2, 2);
+    parts.push(c.toDataURL().slice(-40));
+  } catch(e) {}
+  const str = parts.join('||');
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(31, h) + str.charCodeAt(i) | 0; }
+  return Math.abs(h).toString(36);
+}
+
 // Initialize on load
-window.addEventListener('load', initAuth);
+window.addEventListener('load', () => {
+  visitorFingerprint = generateFingerprint();
+  initAuth();
+});
 
 // ── PAYWALL SYSTEM ──
 
