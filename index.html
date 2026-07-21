@@ -1507,6 +1507,7 @@ body.logged-in #tryit {
     <div class="dash-tabs">
       <button class="dash-tab active" onclick="switchDashTab('student', this)">👤 Student View</button>
       <button class="dash-tab" onclick="switchDashTab('parent', this)">👨‍👩‍👧 Parent View</button>
+      <button class="dash-tab" onclick="switchDashTab('cards', this)">📖 My Cards</button>
       <button class="dash-tab" onclick="switchDashTab('quiz', this)">⭐ Smart Quiz</button>
     </div>
 
@@ -1583,6 +1584,18 @@ body.logged-in #tryit {
         <div class="dash-loading">Loading...</div>
       </div>
 
+    </div>
+
+    <!-- MY CARDS VIEW -->
+    <div id="dash-cards" class="dash-panel" style="display:none;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:36px;margin-bottom:8px;">📖</div>
+        <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#0369a1;">My Study Cards</div>
+        <div style="font-size:13px;color:#64748b;font-family:'DM Sans',sans-serif;margin-top:4px;">Saved automatically after earning 5 stars — review these before your next test</div>
+      </div>
+      <div id="allStudyCardsList">
+        <div class="dash-loading">Loading your study cards...</div>
+      </div>
     </div>
 
     <!-- SMART QUIZ VIEW -->
@@ -3559,10 +3572,11 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
     `;
   }
 
-  // Render subject mastery bars
-  const subjects = ['Math', 'Reading', 'Writing', 'Science', 'Social Studies'];
-  const subjectIcons = {'Math':'✏️','Reading':'📖','Writing':'✍️','Science':'🔬','Social Studies':'🌍'};
-  
+  // Render subject mastery bars — use exact DB subject names
+  const subjects = ['Mathematics', 'Reading & Literature', 'Writing, Grammar & Spelling', 'Science', 'Social Studies'];
+  const subjectDisplay = {'Mathematics':'Math','Reading & Literature':'Reading','Writing, Grammar & Spelling':'Writing','Science':'Science','Social Studies':'Social Studies'};
+  const subjectIcons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+
   const masteryEl = document.getElementById('subjectMasteryBars');
   if (masteryEl) {
     masteryEl.innerHTML = subjects.map(subj => {
@@ -3572,15 +3586,15 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
         : 0;
       const sessCount = sessions.filter(s => s.subject === subj).length;
       const color = avgSubjMastery >= 80 ? '#10b981' : avgSubjMastery >= 60 ? '#0369a1' : avgSubjMastery >= 40 ? '#f59e0b' : '#ef4444';
-      
+
       return `
         <div class="mastery-bar-card">
           <div class="mastery-bar-row">
-            <div class="mastery-bar-name">${subjectIcons[subj]} ${subj}</div>
+            <div class="mastery-bar-name">${subjectIcons[subj]} ${subjectDisplay[subj]}</div>
             <div class="mastery-bar-pct" style="color:${color}">${avgSubjMastery}%</div>
           </div>
           <div class="mastery-bar-track"><div class="mastery-bar-fill" style="width:${avgSubjMastery}%;background:${color}"></div></div>
-          <div class="mastery-bar-sessions">${sessCount} sessions${subjMastery.length > 0 ? ' · ' + subjMastery[0].topic : ''}</div>
+          <div class="mastery-bar-sessions">${sessCount} session${sessCount !== 1 ? 's' : ''}${subjMastery.length > 0 ? ' · ' + subjMastery[0].topic : ''}</div>
         </div>
       `;
     }).join('');
@@ -3639,27 +3653,33 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
       `).join('');
   }
 
-  // Render study cards
-  const studyCardsEl = document.getElementById('studyCardsList');
-  if (studyCardsEl) {
-    if (studyCards.length === 0) {
-      studyCardsEl.innerHTML = '<div class="no-growth" style="color:#0369a1;background:#e0f2fe;border-color:#bae6fd;">📖 No study cards yet — earn 5 stars in a session to unlock your first card!</div>';
-    } else {
-      studyCardsEl.innerHTML = studyCards.map(card => `
-        <div style="background:#fff;border:1.5px solid rgba(3,105,161,.1);border-radius:12px;padding:14px 16px;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-family:'Fraunces',serif;font-size:13px;color:#0369a1;font-weight:700;">${card.topic}</div>
-            <div style="font-size:10px;color:#94a3b8;">${new Date(card.created_at).toLocaleDateString()}</div>
-          </div>
-          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${card.subject} · ${card.grade || ''}</div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            ${(card.concepts || []).map(c => `<div style="font-size:12px;color:#334155;padding:4px 0;border-bottom:1px solid rgba(3,105,161,.06);">• ${c}</div>`).join('')}
-          </div>
-          ${card.memory_tip ? `<div style="margin-top:8px;font-size:11px;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;">💡 ${card.memory_tip}</div>` : ''}
+  // Build study card HTML helper
+  function buildCardHTML(card) {
+    return `
+      <div style="background:#fff;border:1.5px solid rgba(3,105,161,.15);border-radius:14px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 8px rgba(3,105,161,.06);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-family:'Fraunces',serif;font-size:14px;color:#0369a1;font-weight:700;">${card.topic}</div>
+          <div style="font-size:10px;color:#94a3b8;">${new Date(card.created_at).toLocaleDateString()}</div>
         </div>
-      `).join('');
-    }
+        <div style="font-size:11px;color:#64748b;margin-bottom:10px;font-family:'DM Sans',sans-serif;">${card.subject} · ${card.grade || ''}</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          ${(card.concepts || []).map(c => `<div style="font-size:12px;color:#334155;padding:5px 0;border-bottom:1px solid rgba(3,105,161,.07);font-family:'DM Sans',sans-serif;">• ${c}</div>`).join('')}
+        </div>
+        ${card.memory_tip ? `<div style="margin-top:10px;font-size:12px;color:#166534;background:#f0fdf4;border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;">💡 <strong>Memory tip:</strong> ${card.memory_tip}</div>` : ''}
+      </div>
+    `;
   }
+
+  const noCardsMsg = '<div class="no-growth" style="color:#0369a1;background:#e0f2fe;border-color:#bae6fd;">📖 No study cards yet — earn 5 stars in a session to unlock your first card!</div>';
+  const cardsHTML = studyCards.length === 0 ? noCardsMsg : studyCards.map(buildCardHTML).join('');
+
+  // Render study cards in Student View
+  const studyCardsEl = document.getElementById('studyCardsList');
+  if (studyCardsEl) studyCardsEl.innerHTML = cardsHTML;
+
+  // Render study cards in My Cards tab
+  const allCardsEl = document.getElementById('allStudyCardsList');
+  if (allCardsEl) allCardsEl.innerHTML = cardsHTML;
 
   // Update parent weekly stats
   const weekSessions = sessions.filter(s => {
@@ -4209,7 +4229,7 @@ async function saveStudyCard(card, grade, btn) {
 
   if (currentUser) {
     try {
-      await sbClient.from('study_cards').insert({
+      const { error: insertErr } = await sbClient.from('study_cards').insert({
         user_id: currentUser.id,
         subject: card.subject,
         topic: card.topic,
@@ -4218,6 +4238,7 @@ async function saveStudyCard(card, grade, btn) {
         grade: grade,
         created_at: new Date().toISOString()
       });
+      if (insertErr) throw insertErr;
       btn.textContent = '✅ Saved!';
       btn.style.background = '#10b981';
       // Refresh dashboard if visible
