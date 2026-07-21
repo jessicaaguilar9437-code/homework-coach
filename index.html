@@ -3348,6 +3348,14 @@ let sessionMessageCount = 0;
 let sessionStruggleCount = 0;
 let sessionStartTime = Date.now();
 let currentSubjectSession = null;
+let currentSessionId = null;
+
+function generateSessionId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 let currentTopicSession = null;
 
 // ── TOPIC DETECTION FROM CONVERSATION ──
@@ -3416,8 +3424,10 @@ async function saveSessionData() {
     const durationMinutes = Math.round((Date.now() - sessionStartTime) / 60000);
     const masteryLevel = Math.max(0, Math.min(100, 100 - (sessionStruggleCount * 15)));
     
-    // Save session
-    await sbClient.from('sessions').insert({
+    // Save session — upsert so repeated saves in same session update the row, not duplicate it
+    if (!currentSessionId) currentSessionId = generateSessionId();
+    await sbClient.from('sessions').upsert({
+      id: currentSessionId,
       user_id: currentUser.id,
       subject: detected.subject,
       topic: detected.topic,
@@ -3425,7 +3435,7 @@ async function saveSessionData() {
       mastery_level: masteryLevel,
       struggle_count: sessionStruggleCount,
       completed: true
-    });
+    }, { onConflict: 'id' });
 
     // Update topic mastery
     const { data: existing } = await sbClient
@@ -3492,33 +3502,38 @@ function resetSessionTracking() {
   sessionMessageCount = 0;
   sessionStruggleCount = 0;
   sessionStartTime = Date.now();
+  currentSessionId = generateSessionId();
 }
 
 // ── LOAD DASHBOARD DATA ──
 async function loadDashboardData() {
   if (!currentUser) return;
-  
+
   try {
-    const { data: sessions } = await sbClient
+    const { data: sessions, error: sessErr } = await sbClient
       .from('sessions').select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
+    if (sessErr) console.error('Sessions RLS error — run SQL in Supabase:', sessErr.message);
 
-    const { data: mastery } = await sbClient
+    const { data: mastery, error: mastErr } = await sbClient
       .from('topic_mastery').select('*')
       .eq('user_id', currentUser.id)
       .order('mastery_percentage', { ascending: true });
+    if (mastErr) console.error('Topic mastery RLS error — run SQL in Supabase:', mastErr.message);
 
-    const { data: growthAreas } = await sbClient
+    const { data: growthAreas, error: gaErr } = await sbClient
       .from('growth_areas').select('*')
       .eq('user_id', currentUser.id)
       .eq('resolved', false)
       .order('struggle_count', { ascending: false });
+    if (gaErr) console.error('Growth areas RLS error — run SQL in Supabase:', gaErr.message);
 
-    const { data: studyCards } = await sbClient
+    const { data: studyCards, error: scErr } = await sbClient
       .from('study_cards').select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
+    if (scErr) console.error('Study cards RLS error — run SQL in Supabase:', scErr.message);
 
     renderDashboard(sessions || [], mastery || [], growthAreas || [], studyCards || []);
   } catch(e) {
@@ -4210,6 +4225,7 @@ async function saveStudyCard(card, grade, btn) {
         loadDashboardData();
       }
     } catch(e) {
+      console.error('Study card save error:', e);
       btn.textContent = 'Save to my cards';
       btn.disabled = false;
     }
