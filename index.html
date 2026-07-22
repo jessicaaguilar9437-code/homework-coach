@@ -1493,7 +1493,7 @@ body.logged-in #tryit {
 <!-- ═══════════════════════════════════════════════════ -->
 <!-- STUDENT & PARENT DASHBOARD -->
 <!-- ═══════════════════════════════════════════════════ -->
-<section id="dashboardSection" class="marketing-section" style="display:none;background:#f0f9ff;">
+<section id="dashboardSection" style="display:none;background:#f0f9ff;padding:60px 0;">
   <div style="max-width:900px;margin:0 auto;padding:0 5%;">
 
     <!-- Dashboard Header -->
@@ -3248,21 +3248,10 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  // PAYWALL LOGIC — server-side fingerprint tracking prevents cookie/refresh bypass
+  // PAYWALL LOGIC — server enforces via fingerprint+IP, client counter is UX only
   if (isSubscribed) {
     // Subscribed — unlimited, never paywall
-  } else if (currentUser) {
-    await loadUserProfile();
-    if (!isSubscribed) {
-      freeMessageCount++;
-      updateFreeCountDisplay();
-      if (freeMessageCount > FREE_MESSAGE_LIMIT) {
-        showPaywall();
-        return;
-      }
-    }
   } else {
-    // Non-logged-in: client counter for UX only — server enforces via fingerprint
     freeMessageCount++;
     updateFreeCountDisplay();
     if (freeMessageCount > FREE_MESSAGE_LIMIT) {
@@ -4422,9 +4411,6 @@ async function initAuth() {
 
 async function loadUserProfile() {
   if (!currentUser) return;
-  // Always clear localStorage when a user is logged in — prevents stale paywall
-  localStorage.removeItem('hw_free_count');
-  freeMessageCount = 0;
 
   let data = null;
   try {
@@ -4437,7 +4423,7 @@ async function loadUserProfile() {
     }
   } catch(e) {
     console.log('Profile fetch error:', e);
-    data = { is_subscribed: true };
+    data = { is_subscribed: false };
   }
 
   if (data && data.is_subscribed === true) {
