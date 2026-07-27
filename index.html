@@ -3713,15 +3713,27 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
   // Render smart quiz growth area topics
   const smartQuizTopicsEl = document.getElementById('smartQuizTopics');
   if (smartQuizTopicsEl) {
-    if (growthAreas.length === 0) {
-      smartQuizTopicsEl.innerHTML = '<div class="dash-loading">Keep studying with Ollie — your Growth Areas will appear here!</div>';
+    if (growthAreas.length === 0 && mastery.length === 0) {
+      smartQuizTopicsEl.innerHTML = '<div class="dash-loading">Keep studying with Ollie — your personalized quiz will appear here once you have sessions!</div>';
     } else {
-      smartQuizTopicsEl.innerHTML = growthAreas.slice(0, 4).map(ga => `
-        <div class="smart-quiz-topic">
-          <div class="smart-quiz-topic-name">${subjectIcons[ga.subject] || '📚'} ${ga.topic}</div>
-          <div class="smart-quiz-topic-tag">Struggled ${ga.struggle_count}x</div>
-        </div>
-      `).join('');
+      const quizTopics = growthAreas.length > 0 ? growthAreas.slice(0, 4) : mastery.slice(0, 4);
+      smartQuizTopicsEl.innerHTML = quizTopics.map(item => {
+        const isGrowth = item.struggle_count !== undefined;
+        const topicMastery = mastery.find(m => m.topic === item.topic && m.subject === item.subject);
+        const masteryPct = topicMastery ? topicMastery.mastery_percentage : null;
+        const color = masteryPct >= 80 ? '#10b981' : masteryPct >= 60 ? '#f59e0b' : '#ef4444';
+        return `
+          <div class="smart-quiz-topic">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+              <div class="smart-quiz-topic-name">${subjectIcons[item.subject] || '📚'} ${item.topic}</div>
+              ${masteryPct !== null ? `<div style="font-size:11px;font-weight:700;color:${color}">${masteryPct}%</div>` : ''}
+            </div>
+            <div class="smart-quiz-topic-tag" style="margin-top:4px;">
+              ${isGrowth ? `Struggled ${item.struggle_count}x` : `${item.subject}`}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
   }
 }
@@ -3761,27 +3773,92 @@ function startPracticeZone(subject, topic) {
   }, 600);
 }
 
-// ── SMART QUIZ ME — Pulls from Growth Areas ──
+// ── SMART QUIZ ME — Personalized quiz based on student's actual weak topics ──
 async function startSmartQuiz() {
   if (!currentUser) {
     alert('Please log in to use Smart Quiz Me');
     return;
   }
-  
+
+  // Pull growth areas (topics student struggled with most)
   const { data: growthAreas } = await sbClient
     .from('growth_areas')
     .select('*')
     .eq('user_id', currentUser.id)
     .eq('resolved', false)
     .order('struggle_count', { ascending: false })
-    .limit(1);
+    .limit(5);
 
-  if (growthAreas && growthAreas.length > 0) {
-    const top = growthAreas[0];
-    startPracticeZone(top.subject, top.topic);
-  } else {
-    alert('No Growth Areas found yet — keep studying with Ollie and come back!');
+  // Pull mastery data (lowest mastery subjects)
+  const { data: masteryData } = await sbClient
+    .from('topic_mastery')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('mastery_percentage', { ascending: true })
+    .limit(5);
+
+  const hasGrowth = growthAreas && growthAreas.length > 0;
+  const hasMastery = masteryData && masteryData.length > 0;
+
+  if (!hasGrowth && !hasMastery) {
+    alert('Keep studying with Ollie first — your Smart Quiz will be personalized once you have some sessions!');
+    return;
   }
+
+  // Build the personalized quiz context for Ollie
+  let weakTopicsText = '';
+  if (hasGrowth) {
+    weakTopicsText = growthAreas.map(ga => {
+      const m = masteryData ? masteryData.find(m => m.topic === ga.topic && m.subject === ga.subject) : null;
+      const pct = m ? ` (${m.mastery_percentage}% mastery)` : '';
+      return `• ${ga.topic} in ${ga.subject}${pct} — struggled ${ga.struggle_count} time${ga.struggle_count !== 1 ? 's' : ''}`;
+    }).join('\n');
+  } else if (hasMastery) {
+    weakTopicsText = masteryData.map(m =>
+      `• ${m.topic} in ${m.subject} — ${m.mastery_percentage}% mastery`
+    ).join('\n');
+  }
+
+  // Pick the top subject to set context
+  const topItem = hasGrowth ? growthAreas[0] : masteryData[0];
+  currentSubject = topItem.subject;
+
+  // Build the first message that launches the personalized quiz
+  const quizMessage = `[SMART QUIZ — PERSONALIZED FOR THIS STUDENT]
+
+Here are the topics I struggled with most based on my study sessions:
+${weakTopicsText}
+
+Please quiz me on these weak areas. Start with the one I struggled with most. Ask ONE question at a time with 4 multiple choice options labeled A B C D. Give me a ⭐ for each correct answer and track my score out of 10. Focus specifically on the concepts I had trouble with — make it targeted and helpful!`;
+
+  // Navigate to chat workspace
+  resetSessionTracking();
+  history = [];
+
+  const icons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+  const icon = icons[currentSubject] || '⭐';
+
+  const gradeScreen = document.getElementById('gradeScreen');
+  const subjectScreen = document.getElementById('subjectScreen');
+  const selectionBottomBar = document.getElementById('selectionBottomBar');
+  const progressStepsBar = document.getElementById('progressStepsBar');
+  const ollieWorkspace = document.getElementById('ollieWorkspace');
+
+  if (gradeScreen) gradeScreen.style.display = 'none';
+  if (subjectScreen) subjectScreen.style.display = 'none';
+  if (selectionBottomBar) selectionBottomBar.style.display = 'none';
+  if (progressStepsBar) progressStepsBar.style.display = 'none';
+  if (ollieWorkspace) ollieWorkspace.style.display = 'flex';
+
+  activateFullscreenWorkspace(currentSubject, currentSubject, gradeLevel || 'Grade 7', icon);
+
+  setTimeout(() => {
+    const input = document.getElementById('cbInput');
+    if (input) {
+      input.value = quizMessage;
+      sendMsg();
+    }
+  }, 600);
 }
 
 // Auto-save session when user leaves or closes tab
@@ -3794,6 +3871,7 @@ window.addEventListener('beforeunload', async () => {
 // ── HANDS-FREE VOICE INPUT ──
 let recognition = null;
 let isListening = false;
+let micCancelled = false;
 
 function toggleVoiceInput() {
   const micBtn = document.getElementById('cbMic');
@@ -3804,11 +3882,14 @@ function toggleVoiceInput() {
     return;
   }
 
+  // If already listening — stop and let user review/edit before sending
   if (isListening) {
+    micCancelled = false; // stopped intentionally, show text but don't auto-send
     if (recognition) recognition.stop();
     return;
   }
 
+  micCancelled = false;
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
   recognition.lang = 'en-US';
@@ -3817,8 +3898,19 @@ function toggleVoiceInput() {
 
   recognition.onstart = function() {
     isListening = true;
-    if (micBtn) { micBtn.classList.add('listening'); micBtn.title = 'Listening... tap to stop'; }
+    if (micBtn) {
+      micBtn.innerHTML = '⏹';
+      micBtn.classList.add('listening');
+      micBtn.title = 'Tap to stop recording';
+    }
     if (input) input.placeholder = '🎤 Listening... speak your question';
+    // Stop Ollie voice if playing while mic is on
+    if (_currentAudio) {
+      _currentAudio.pause();
+      _currentAudio = null;
+      document.querySelectorAll('.voice-btn').forEach(b => { b.classList.remove('playing','was-playing'); b.innerHTML = '🔊'; });
+    }
+    if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
   };
 
   recognition.onresult = function(event) {
@@ -3831,14 +3923,22 @@ function toggleVoiceInput() {
 
   recognition.onend = function() {
     isListening = false;
-    if (micBtn) { micBtn.classList.remove('listening'); micBtn.title = 'Speak your question'; }
+    if (micBtn) {
+      micBtn.innerHTML = '🎤';
+      micBtn.classList.remove('listening');
+      micBtn.title = 'Speak your question';
+    }
     if (input) input.placeholder = 'Type your homework question here...';
-    if (input && input.value.trim()) { setTimeout(() => sendMsg(), 500); }
+    // Don't auto-send — let student review what was captured and press Send themselves
   };
 
   recognition.onerror = function(event) {
     isListening = false;
-    if (micBtn) { micBtn.classList.remove('listening'); micBtn.title = 'Speak your question'; }
+    if (micBtn) {
+      micBtn.innerHTML = '🎤';
+      micBtn.classList.remove('listening');
+      micBtn.title = 'Speak your question';
+    }
     if (input) input.placeholder = 'Type your homework question here...';
     if (event.error !== 'no-speech') console.error('Speech recognition error:', event.error);
   };
@@ -4714,6 +4814,9 @@ let currentUtterance = null;
 let _currentAudio = null;
 
 async function speakText(text, btn) {
+  // Check BEFORE removing classes whether this button was the one playing
+  const thisWasPlaying = btn.classList.contains('was-playing');
+
   // Stop anything currently playing
   if (_currentAudio) {
     _currentAudio.pause();
@@ -4722,13 +4825,11 @@ async function speakText(text, btn) {
       b.classList.remove('playing', 'was-playing');
       b.innerHTML = '🔊';
     });
-    if (btn.classList.contains('was-playing')) {
-      btn.classList.remove('was-playing');
-      return;
-    }
+    if (thisWasPlaying) return; // Same button clicked — just stop, don't restart
   }
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
     window.speechSynthesis.cancel();
+    if (thisWasPlaying) return;
   }
 
   const cleanText = (text || '')
