@@ -760,6 +760,16 @@ body.logged-in #tryit {
   </div>
 </div>
 
+<!-- RESUME SESSION BANNER -->
+<div id="resumeBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:8888;background:#fff;border-radius:18px;box-shadow:0 8px 32px rgba(3,105,161,.18);padding:20px 22px;max-width:340px;width:90%;border:1.5px solid rgba(3,105,161,.15);">
+  <div style="font-family:'Fraunces',serif;font-size:15px;color:#0369a1;font-weight:700;margin-bottom:5px;">📚 Resume your session?</div>
+  <div id="resumeBannerText" style="font-size:12px;color:#475569;margin-bottom:14px;line-height:1.5;"></div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="resumeConversation()" style="flex:1;background:#0369a1;color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">▶ Resume</button>
+    <button onclick="clearSavedConversation(true)" style="flex:1;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Start Fresh</button>
+  </div>
+</div>
+
 <!-- SET PASSWORD MODAL — shown after first magic link login -->
 <div class="auth-modal-overlay" id="setPasswordModal" style="display:none;align-items:center;justify-content:center;">
   <div class="auth-modal" style="text-align:center;">
@@ -1691,6 +1701,10 @@ body.logged-in #tryit {
 let gradeLevel = "Grade 3 (age 8–9)";
 let currentSubject = "any academic subject";
 let history = [];
+let dashboardSessions = [];
+let dashboardMastery = [];
+let dashboardGrowthAreas = [];
+let currentGrowthQuiz = null;
 
 function setGrade(btn, grade) {
   document.querySelectorAll('.gb').forEach(b => b.classList.remove('active'));
@@ -1922,6 +1936,11 @@ SCIENCE — NEVER do this:
 WRONG: Student asks about photosynthesis → Ollie lists all the steps
 RIGHT: "Plants make their own food using three things. What do you think a plant needs to grow?"
 
+SCIENCE REDIRECT RULE — when student gives partial answer to photosynthesis:
+If student names the PROCESS (photosynthesis) instead of the INPUTS (sunlight, water, CO₂) — that answer is WRONG. Do not say "you're on the right track." Say: "That is the name of the process — but what does a plant actually NEED to perform that process? Think about what you would find in a garden."
+If student says "water and sunlight" but misses CO₂ — do NOT say "oxygen is what they release." That reveals the byproduct before the student discovers it. Instead ask: "Those two are correct! Plants also take in a gas from the air — what do animals breathe out?"
+NEVER reveal a byproduct or any related fact until the student has correctly discovered the primary answer.
+
 SOCIAL STUDIES — NEVER do this:
 WRONG: Student asks about the American Revolution → Ollie explains the whole event
 RIGHT: "What do you already know about why the colonists were unhappy with Britain?"
@@ -1932,8 +1951,9 @@ Do NOT rely on what seems right — actually calculate it.
 If 7×9 = 63 and student says 63 → confirm IMMEDIATELY with 🎉 — say "Exactly right! 7×9=63! 🎉" — do NOT redirect, do NOT ask them to verify further, do NOT say "close"
 If student says 62 → it is WRONG. Do not confirm. Redirect warmly.
 If student says "about 63" → ask them to state the exact number.
-CRITICAL: If the student's answer is CORRECT on the first try → celebrate it RIGHT AWAY with 🎉. Never make a correct student feel wrong. Never make them repeat a correct answer. Confirm clearly and move on.
-Never confirm an approximate or partial answer as fully correct.
+If student ends their answer with a question mark (e.g. "carbon dioxide?") → they are NOT confident. Ask them to confirm: "Say it without the question mark — are you sure?" Do NOT give 🎉 for uncertain answers.
+CRITICAL: If the student's answer is CORRECT AND confident on the first try → celebrate it RIGHT AWAY with 🎉. Never make a correct student feel wrong. Never make them repeat a correct answer. Confirm clearly and move on.
+Never confirm an approximate, uncertain, or partial answer as fully correct.
 
 RULE C — 3 LINES MAXIMUM:
 Every response is 3 lines or fewer. No exceptions. If you cannot say it in 3 lines, cut it.
@@ -1949,6 +1969,25 @@ When the student activates Quiz Mode (by clicking Quiz Me or asking to be quizze
 - After 5 questions say: "Excellent work! You completed a full quiz session. Would you like another round or do you have homework to work on?"
 - All quiz questions must be at exactly ${gradeLevel} academic level
 - Quiz questions must be clear, specific, and have ONE correct answer
+
+RULE D1 — QUESTION VARIETY — NEVER REPEAT:
+Every quiz session must use FRESH questions. The session number is included in the quiz context.
+For session #2 on the same topic — ask questions from a different angle, different example, higher difficulty.
+For session #3+ — escalate difficulty further and test deeper understanding of the same concept.
+WRONG: Asking "What do plants need for photosynthesis?" in session 2 after asking it in session 1.
+RIGHT: Session 2 → "Which part of the plant cell captures sunlight during photosynthesis?" (deeper angle)
+RIGHT: Session 3 → "If a plant has no chlorophyll, what process cannot occur and why?" (higher thinking)
+
+RULE D2 — SMART QUIZ MULTIPLE CHOICE MODE:
+When the conversation begins with [SMART QUIZ — PERSONALIZED FOR THIS STUDENT]:
+- This is a scored multiple choice quiz — NOT tutoring mode
+- Give exactly 4 options (A, B, C, D) on separate lines for every question
+- The "NEVER GIVE THE ANSWER" rule does NOT apply here — the answer choices ARE the quiz
+- When student picks the CORRECT letter → say "Exactly right! 🎉 [one sentence why]" — STOP. Do not ask the next question yet. Wait for the student.
+- When student picks a WRONG letter → say "Not quite — the correct answer was [letter]: [answer] because [brief reason]." Then immediately show the next question.
+- Never make the student work through steps in quiz mode — just confirm or correct, then move on
+- Track score: show "Question X of 10" before each question
+- After 10 questions show final score out of 10
 
 ═══════════════════════════════
 CORE IDENTITY — NON-NEGOTIABLE
@@ -2415,14 +2454,20 @@ Any real-world analogy you use MUST be mathematically and factually correct.
 WRONG: "Think of 0.25 × 80 as 25 quarters times 80" — this is mathematically wrong
 RIGHT: "Think of 80 cookies split equally into 4 groups — how many in each group?"
 
-RULE 20 — NEVER PUT 🎉 AND A NEW QUESTION IN THE SAME RESPONSE:
-🎉 signals the complete final answer has been reached. After 🎉 the session on that problem is DONE.
-NEVER follow 🎉 with another question on the same problem.
+⛔ RULE 20 — NEVER PUT 🎉 AND A NEW QUESTION IN THE SAME RESPONSE — THIS IS ABSOLUTE:
+🎉 signals the complete final answer has been reached. After 🎉 — STOP. Full stop. End the response.
+NEVER follow 🎉 with another question in the same response. Not even "Would you like to try another?"
+NEVER chain questions after 🎉. The celebration IS the response. One sentence max after 🎉.
 
-RULE 21 — NEVER COMBINE CELEBRATION AND A NEW TASK IN THE SAME RESPONSE:
-When a student gets something right — celebrate it fully first. Then in a separate response introduce the next task.
+WRONG: "Exactly right — carbon dioxide! 🎉 What do plants produce as a byproduct?" ← NEVER DO THIS
+WRONG: "Exactly right! 🎉 What is the state of matter with a fixed shape?" ← NEVER DO THIS
+WRONG: "Exactly right! 🎉 Would you like to try another question?" ← NEVER DO THIS
+RIGHT: "Exactly right — plants need carbon dioxide for photosynthesis! 🎉" ← STOP HERE
+
+⛔ RULE 21 — NEVER COMBINE CELEBRATION AND A NEW TASK IN THE SAME RESPONSE:
+When a student gets something right — celebrate it fully. End the response. Wait for their next message.
 WRONG: "Exactly right! 🎉 You named all three branches! What is one power the Judicial branch has?"
-RIGHT: "Exactly right! You named all three branches perfectly. 🎉" — STOP. Then move forward.
+RIGHT: "Exactly right! You named all three branches perfectly. 🎉" — STOP. Do not add anything else.
 
 RULE 22 — NEVER ASK THE SAME QUESTION MORE THAN ONCE:
 Before asking any question — check the FULL conversation history.
@@ -3232,6 +3277,10 @@ function appendMsg(role, text) {
   if(role === 'bot') {
     lastBotMessage = text;
     setTimeout(() => showFeedback(), 800);
+    // Check if growth quiz just completed (score detected)
+    if (currentGrowthQuiz) checkGrowthQuizComplete(text);
+    // Save conversation so student can resume if they close the window
+    saveConversationToStorage();
   }
 
   div.appendChild(av);
@@ -3557,7 +3606,10 @@ async function loadDashboardData() {
       .order('created_at', { ascending: false });
     if (scErr) console.error('Study cards RLS error — run SQL in Supabase:', scErr.message);
 
-    renderDashboard(sessions || [], mastery || [], growthAreas || [], studyCards || []);
+    dashboardSessions = sessions || [];
+    dashboardMastery = mastery || [];
+    dashboardGrowthAreas = growthAreas || [];
+    renderDashboard(dashboardSessions, dashboardMastery, dashboardGrowthAreas, studyCards || []);
   } catch(e) {
     console.error('Dashboard load error:', e);
   }
@@ -3615,16 +3667,21 @@ function renderDashboard(sessions, mastery, growthAreas, studyCards = []) {
     if (growthAreas.length === 0) {
       growthEl.innerHTML = '<div class="no-growth">🌟 No Growth Areas yet — keep studying!</div>';
     } else {
-      growthEl.innerHTML = growthAreas.map(ga => `
+      growthEl.innerHTML = growthAreas.map(ga => {
+        const gaMastery = mastery.find(m => m.topic === ga.topic && m.subject === ga.subject);
+        const masteryPct = gaMastery ? gaMastery.mastery_percentage : 0;
+        const safeSubject = ga.subject.replace(/'/g, "\\'");
+        const safeTopic = ga.topic.replace(/'/g, "\\'");
+        return `
         <div class="growth-card">
           <div class="growth-icon">${subjectIcons[ga.subject] || '📚'}</div>
           <div class="growth-info">
             <div class="growth-title">${ga.topic}</div>
-            <div class="growth-sub">${ga.subject} · detected in ${ga.struggle_count} sessions</div>
+            <div class="growth-sub">${ga.subject} · struggled ${ga.struggle_count} times · ${masteryPct}% mastery</div>
           </div>
-          <button class="practice-zone-btn" onclick="startPracticeZone('${ga.subject}', '${ga.topic}')">Practice Zone</button>
-        </div>
-      `).join('');
+          <button class="practice-zone-btn" style="background:#ef4444;color:#fff;border:none;" onclick="startGrowthQuiz('${safeSubject}', '${safeTopic}', ${ga.struggle_count}, ${masteryPct})">Quiz me!</button>
+        </div>`;
+      }).join('');
     }
   }
 
@@ -3800,22 +3857,19 @@ async function startSmartQuiz() {
     return;
   }
 
-  // Pull growth areas (topics student struggled with most)
-  const { data: growthAreas } = await sbClient
-    .from('growth_areas')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('resolved', false)
-    .order('struggle_count', { ascending: false })
-    .limit(5);
+  // Use cached dashboard data — fall back to fresh fetch if needed
+  let growthAreas = dashboardGrowthAreas.length > 0 ? dashboardGrowthAreas : null;
+  let masteryData = dashboardMastery.length > 0 ? dashboardMastery : null;
+  const totalSessions = dashboardSessions.length;
 
-  // Pull mastery data (lowest mastery subjects)
-  const { data: masteryData } = await sbClient
-    .from('topic_mastery')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('mastery_percentage', { ascending: true })
-    .limit(5);
+  if (!growthAreas || !masteryData) {
+    const [gaRes, mRes] = await Promise.all([
+      sbClient.from('growth_areas').select('*').eq('user_id', currentUser.id).eq('resolved', false).order('struggle_count', { ascending: false }),
+      sbClient.from('topic_mastery').select('*').eq('user_id', currentUser.id).order('mastery_percentage', { ascending: true })
+    ]);
+    growthAreas = gaRes.data || [];
+    masteryData = mRes.data || [];
+  }
 
   const hasGrowth = growthAreas && growthAreas.length > 0;
   const hasMastery = masteryData && masteryData.length > 0;
@@ -3825,40 +3879,50 @@ async function startSmartQuiz() {
     return;
   }
 
-  // Build the personalized quiz context for Ollie
-  let weakTopicsText = '';
+  // Build growth areas context (weak spots — more quiz weight)
+  let growthText = '';
   if (hasGrowth) {
-    weakTopicsText = growthAreas.map(ga => {
+    growthText = growthAreas.slice(0, 5).map(ga => {
       const m = masteryData ? masteryData.find(m => m.topic === ga.topic && m.subject === ga.subject) : null;
-      const pct = m ? ` (${m.mastery_percentage}% mastery)` : '';
-      return `• ${ga.topic} in ${ga.subject}${pct} — struggled ${ga.struggle_count} time${ga.struggle_count !== 1 ? 's' : ''}`;
+      const pct = m ? ` — ${m.mastery_percentage}% mastery` : '';
+      return `• [WEAK] ${ga.topic} (${ga.subject})${pct} — struggled ${ga.struggle_count} times`;
     }).join('\n');
-  } else if (hasMastery) {
-    weakTopicsText = masteryData.map(m =>
-      `• ${m.topic} in ${m.subject} — ${m.mastery_percentage}% mastery`
+  }
+
+  // Build ALL studied subjects context (for variety mix)
+  let allTopicsText = '';
+  if (hasMastery) {
+    allTopicsText = masteryData.map(m =>
+      `• ${m.topic} (${m.subject}) — ${m.mastery_percentage}% mastery`
     ).join('\n');
   }
 
-  // Pick the top subject to set context
+  // Pick subject context from top growth area or top mastery
   const topItem = hasGrowth ? growthAreas[0] : masteryData[0];
   currentSubject = topItem.subject;
 
   // Build the first message that launches the personalized quiz
   const quizMessage = `[SMART QUIZ — PERSONALIZED FOR THIS STUDENT]
+Total study sessions completed: ${totalSessions}
+This is quiz session #${totalSessions + 1} — ask DIFFERENT questions than previous sessions.
 
-Here are the topics I struggled with most based on my study sessions:
-${weakTopicsText}
+GROWTH AREAS (topics student struggled with most — include at least 5 questions from here):
+${growthText || 'None yet'}
 
-Please start quizzing me now on these weak areas — begin with the topic I struggled with MOST. Quiz me on 10 questions total.
+ALL STUDIED TOPICS (mix these in for variety):
+${allTopicsText || 'None yet'}
 
-QUIZ RULES FOR THIS SESSION:
-- Ask ONE question at a time with ONE specific correct answer — no multiple choice
-- Wait for my answer before moving on
-- If I answer CORRECTLY on the first try → immediately say so with 🎉 and tell me I got it right, then move to question 2
-- If I answer wrong → guide me with one hint, then let me try again
-- Keep score: track how many I get right out of 10
-- After all 10 say my final score
-- Start the quiz NOW with question 1`;
+SMART QUIZ FORMAT — FOLLOW EXACTLY:
+- Ask 10 multiple choice questions total (A, B, C, D on separate lines)
+- MIX subjects throughout — do NOT ask all questions from one subject in a row
+- Weight: ~60% from growth areas, ~40% from other studied topics
+- Show "Question X of 10" before each question
+- Vary difficulty based on mastery — lower mastery topics get slightly easier questions first
+- Ask FRESH questions each session (session #${totalSessions + 1}) — never repeat the same question
+- If student answers CORRECT letter → "Exactly right! 🎉 [one sentence why]" then STOP and wait
+- If student answers WRONG letter → "Not quite — the correct answer was [letter]: [answer]. [brief reason]." then show next question
+- After question 10: "You scored X out of 10! [encouragement]"
+- Start Question 1 of 10 NOW`;
 
   // Navigate to chat workspace
   resetSessionTracking();
@@ -3882,12 +3946,98 @@ QUIZ RULES FOR THIS SESSION:
   activateFullscreenWorkspace(currentSubject, currentSubject, gradeLevel || 'Grade 7', icon);
 
   setTimeout(() => {
-    const input = document.getElementById('cbInput');
-    if (input) {
-      input.value = quizMessage;
-      sendMsg();
-    }
+    // Push quiz context silently to history — don't show instructions in chat
+    history.push({ role: 'user', content: quizMessage });
+    // Show a clean friendly message in chat instead
+    appendMsg('user', '⭐ Start my Smart Quiz!');
+    // Get Ollie's first question directly
+    sendMsgToOllie();
   }, 600);
+}
+
+// ── GROWTH AREA TARGETED QUIZ ──
+async function startGrowthQuiz(subject, topic, struggleCount, masteryPct) {
+  if (!currentUser) { alert('Please log in to use this feature'); return; }
+
+  currentGrowthQuiz = { subject, topic, struggleCount, masteryPct };
+  currentSubject = subject;
+  resetSessionTracking();
+  history = [];
+
+  const icons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+  const icon = icons[subject] || '📚';
+
+  const quizMsg = `[GROWTH AREA PRACTICE QUIZ]
+Subject: ${subject} | Topic: ${topic}
+Student has struggled with this ${struggleCount} time${struggleCount !== 1 ? 's' : ''}.
+Current mastery: ${masteryPct}%
+This is practice attempt #${struggleCount + 1} — ask DIFFERENT questions than before, progressively harder.
+
+Run a focused 5-question multiple choice quiz ONLY on "${topic}" in ${subject}.
+
+FORMAT — FOLLOW EXACTLY:
+- Show "Question X of 5" before each question
+- Give exactly 4 options: A, B, C, D on separate lines
+- Start easy, get slightly harder each question based on ${masteryPct}% mastery level
+- If correct → "Exactly right! 🎉 [brief why]" then STOP and wait for student
+- If wrong → "Not quite — correct answer was [letter]: [answer]. [brief reason]." then show next question automatically
+- After question 5: "You scored X out of 5! [encouragement]"
+- Start Question 1 of 5 NOW`;
+
+  const gradeScreen = document.getElementById('gradeScreen');
+  const subjectScreen = document.getElementById('subjectScreen');
+  const selectionBottomBar = document.getElementById('selectionBottomBar');
+  const progressStepsBar = document.getElementById('progressStepsBar');
+  const ollieWorkspace = document.getElementById('ollieWorkspace');
+  if (gradeScreen) gradeScreen.style.display = 'none';
+  if (subjectScreen) subjectScreen.style.display = 'none';
+  if (selectionBottomBar) selectionBottomBar.style.display = 'none';
+  if (progressStepsBar) progressStepsBar.style.display = 'none';
+  if (ollieWorkspace) ollieWorkspace.style.display = 'flex';
+
+  const chatSec = document.getElementById('tryit');
+  if (chatSec) chatSec.scrollIntoView({ behavior: 'smooth' });
+
+  activateFullscreenWorkspace(subject, subject, gradeLevel || 'Grade 3', icon);
+
+  setTimeout(() => {
+    history.push({ role: 'user', content: quizMsg });
+    appendMsg('user', `🎯 Quiz me on ${topic}!`);
+    sendMsgToOllie();
+  }, 600);
+}
+
+// Detect quiz score in Ollie's response and update Supabase
+async function checkGrowthQuizComplete(text) {
+  if (!currentGrowthQuiz || !currentUser) return;
+  const scoreMatch = text.match(/(?:scored|got)\s+(\d)\s+out\s+of\s+5|(\d)\/5|(\d)\s+correct\s+out\s+of\s+5/i);
+  if (!scoreMatch) return;
+
+  const score = parseInt(scoreMatch[1] || scoreMatch[2] || scoreMatch[3]);
+  const { subject, topic, struggleCount, masteryPct } = currentGrowthQuiz;
+  currentGrowthQuiz = null;
+
+  const passed = score >= 4;
+  const masteryGain = passed ? 20 : Math.max(5, score * 4);
+  const newMastery = Math.min(100, (masteryPct || 0) + masteryGain);
+
+  // Update growth area — resolve if passed
+  await sbClient.from('growth_areas')
+    .update({ resolved: passed, struggle_count: Math.max(0, struggleCount - (passed ? 2 : 0)) })
+    .eq('user_id', currentUser.id).eq('subject', subject).eq('topic', topic);
+
+  // Update mastery in topic_mastery
+  const { data: existing } = await sbClient.from('topic_mastery')
+    .select('id').eq('user_id', currentUser.id).eq('subject', subject).eq('topic', topic).single();
+  if (existing) {
+    await sbClient.from('topic_mastery').update({ mastery_percentage: newMastery })
+      .eq('user_id', currentUser.id).eq('subject', subject).eq('topic', topic);
+  } else {
+    await sbClient.from('topic_mastery').insert({ user_id: currentUser.id, subject, topic, mastery_percentage: newMastery });
+  }
+
+  // Reload dashboard to reflect updated progress
+  setTimeout(() => loadDashboardData(), 1500);
 }
 
 // Auto-save session when user leaves or closes tab
@@ -4065,6 +4215,8 @@ function newGoNext() {
 
     // Reset session tracking
     resetSessionTracking();
+    // Clear any saved conversation — student chose a fresh start
+    clearSavedConversation(false);
 
     // Clear chat for new subject session
     const msgs = document.getElementById('cbMsgs');
@@ -4522,6 +4674,8 @@ async function initAuth() {
     freeMessageCount = 0;
     await loadUserProfile();
     updateUserStatusBar();
+    // Check if student has an unfinished session to resume
+    setTimeout(() => checkForSavedConversation(), 1000);
     if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
     if (needsPassword) {
       window.history.replaceState({}, '', window.location.pathname);
@@ -4913,8 +5067,117 @@ async function speakText(text, btn) {
   window.speechSynthesis.speak(utterance);
 }
 
+// ── CONVERSATION SAVE / RESTORE ──
+function convoKey() { return 'hw_convo_' + (currentUser ? currentUser.id : 'guest'); }
+
+function saveConversationToStorage() {
+  if (!history || history.length === 0) return;
+  try {
+    localStorage.setItem(convoKey(), JSON.stringify({
+      history,
+      currentSubject,
+      gradeLevel,
+      currentSessionId,
+      messageCount: sessionMessageCount,
+      savedAt: Date.now()
+    }));
+  } catch(e) { /* storage full — ignore */ }
+}
+
+function checkForSavedConversation() {
+  try {
+    const raw = localStorage.getItem(convoKey());
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    // Expire after 24 hours
+    if (!data.history || data.history.length === 0 || (Date.now() - data.savedAt) > 86400000) {
+      localStorage.removeItem(convoKey());
+      return;
+    }
+    const timeStr = new Date(data.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const subj = data.currentSubject && data.currentSubject !== 'any academic subject' ? data.currentSubject : 'Ollie';
+    const msgCount = data.history.filter(m => m.role === 'user').length;
+    const banner = document.getElementById('resumeBanner');
+    const bannerText = document.getElementById('resumeBannerText');
+    if (banner && bannerText) {
+      bannerText.textContent = `You were studying ${subj} at ${timeStr} — ${msgCount} question${msgCount !== 1 ? 's' : ''} in. Pick up where you left off?`;
+      banner.style.display = 'block';
+    }
+  } catch(e) { localStorage.removeItem(convoKey()); }
+}
+
+async function resumeConversation() {
+  const banner = document.getElementById('resumeBanner');
+  if (banner) banner.style.display = 'none';
+  try {
+    const raw = localStorage.getItem(convoKey());
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    // Restore state
+    history = data.history || [];
+    currentSubject = data.currentSubject || currentSubject;
+    gradeLevel = data.gradeLevel || gradeLevel;
+    currentSessionId = data.currentSessionId || null;
+    sessionMessageCount = data.messageCount || 0;
+    // Navigate to workspace
+    const icons = {'Mathematics':'✏️','Reading & Literature':'📖','Writing, Grammar & Spelling':'✍️','Science':'🔬','Social Studies':'🌍'};
+    const icon = icons[currentSubject] || '📚';
+    const ids = ['gradeScreen','subjectScreen','selectionBottomBar','progressStepsBar'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    const ws = document.getElementById('ollieWorkspace');
+    if (ws) ws.style.display = 'flex';
+    activateFullscreenWorkspace(currentSubject, currentSubject, gradeLevel, icon);
+    // Replay last 6 messages so student sees recent context
+    const container = document.getElementById('cbMsgs');
+    if (container) {
+      container.innerHTML = '';
+      const recent = history.slice(-6);
+      recent.forEach(msg => appendMsgQuiet(msg.role === 'assistant' ? 'bot' : 'user', msg.content));
+      container.scrollTop = container.scrollHeight;
+    }
+    // Ollie acknowledges the resume
+    setTimeout(() => {
+      history.push({ role: 'user', content: '[Student resumed session — briefly acknowledge you remember the conversation and ask what they would like to work on next. Keep it to 1-2 lines.]' });
+      sendMsgToOllie();
+    }, 400);
+  } catch(e) { console.error('Resume error:', e); }
+}
+
+// Renders a message without triggering confetti/stars/feedback (for history replay)
+function appendMsgQuiet(role, text) {
+  const container = document.getElementById('cbMsgs');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = `cmsg ${role}`;
+  const av = document.createElement('div');
+  av.className = 'cmsg-av';
+  av.innerHTML = role === 'bot' ? puzzleSVG : '👤';
+  const bubble = document.createElement('div');
+  bubble.className = 'cbubble';
+  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  div.appendChild(av);
+  div.appendChild(bubble);
+  container.appendChild(div);
+}
+
+function clearSavedConversation(startFresh = false) {
+  localStorage.removeItem(convoKey());
+  const banner = document.getElementById('resumeBanner');
+  if (banner) banner.style.display = 'none';
+  if (startFresh) {
+    history = [];
+    resetSessionTracking();
+    // Return to subject selection
+    const ws = document.getElementById('ollieWorkspace');
+    if (ws) ws.style.display = 'none';
+    const grade = document.getElementById('gradeScreen');
+    if (grade) grade.style.display = '';
+  }
+}
+
 async function handleLogout() {
   await sbClient.auth.signOut();
+  clearSavedConversation();
   currentUser = null;
   isSubscribed = false;
   freeMessageCount = 0;
