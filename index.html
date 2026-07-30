@@ -136,6 +136,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .typing{display:flex;gap:4px;padding:10px 14px;background:#f0f9ff;border-radius:15px;border-bottom-left-radius:4px;width:fit-content;margin-top:8px;}
 .typing span{width:7px;height:7px;background:#0ea5e9;border-radius:50%;animation:td 1.2s infinite;}
 .typing span:nth-child(2){animation-delay:.2s;}.typing span:nth-child(3){animation-delay:.4s;}
+/* Change 3 — hero flashcard style */
+.flash-card{background:#fff;border:1.5px solid rgba(3,105,161,.1);border-radius:14px;padding:16px 18px;text-align:center;font-family:'Fraunces',serif;font-size:.88rem;color:#0369a1;line-height:1.55;box-shadow:0 2px 12px rgba(3,105,161,.06);}
+.flash-card.student{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;font-family:'DM Sans',sans-serif;border:none;}
+.flash-card.hint{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#6ee7b7;color:#166534;font-family:'DM Sans',sans-serif;font-size:.82rem;text-align:left;}
+.stars-bar{display:flex;align-items:center;gap:4px;padding:8px 14px;background:#fef9ec;border-top:1px solid #fed7aa;}
+.chat-input-row{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#f8faff;border-top:1px solid rgba(3,105,161,.08);}
+.mic-btn{width:36px;height:36px;background:linear-gradient(135deg,#6ee7b7,#34d399);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.send-btn{width:36px;height:36px;background:#0369a1;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;}
+/* Change 4 — features grid */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:960px;margin:0 auto;}
+.feat-card{background:#f0f9ff;border:1.5px solid rgba(3,105,161,.1);border-radius:16px;padding:24px;text-align:left;}
+.feat-icon-wrap{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;}
+.feat-card-title{font-family:'Fraunces',serif;font-size:1rem;color:#0369a1;margin-bottom:8px;}
+.feat-card-desc{font-size:.83rem;color:#64748b;line-height:1.65;}
+.new-badge{display:inline-block;font-size:.65rem;font-weight:700;background:#0369a1;color:#fff;border-radius:50px;padding:2px 8px;margin-left:6px;vertical-align:middle;}
+@media(max-width:700px){.feat-grid{grid-template-columns:1fr;}}
 @keyframes td{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-7px);}}
 .float-badge{position:absolute;background:var(--white);border-radius:14px;padding:10px 16px;box-shadow:var(--shadow);border:1.5px solid rgba(3,105,161,.1);font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:7px;color:#0369a1;white-space:nowrap;}
 .fb1{top:-16px;right:-24px;animation:floatUp 5s ease-in-out infinite 1s;}
@@ -855,7 +871,7 @@ body.logged-in #tryit {
     </div>
   </div>
   <div class="hero-visual">
-    <div class="float-badge fb1">Step-by-step guided problem solving</div>
+    <div class="float-badge fb1">📊 Track student progress in real time</div>
     <div class="hero-card">
       <div class="hcard-head">
         <div class="hcard-av" style="background:#dbeafe;"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;"></div>
@@ -864,13 +880,23 @@ body.logged-in #tryit {
           <p>● Active · Guiding · Never answers directly</p>
         </div>
       </div>
-      <div class="hc-msg left"><div class="hc-lbl">Student</div><div class="hc-bubble">How do I solve 3/4 + 1/2?</div></div>
-      <div class="hc-msg coach"><div class="hc-lbl">The Homework Coach</div><div class="hc-bubble">Great effort bringing this question forward! When we add fractions, what must be true about the denominators before we can combine them?</div></div>
-      <div class="hc-msg right"><div class="hc-lbl">Student</div><div class="hc-bubble">They need to be the same number?</div></div>
-      <div class="hc-msg coach"><div class="hc-lbl">The Homework Coach</div><div class="hc-bubble">Exactly right — well done. So if the denominator needs to be 4, what would 1/2 need to become? ✨</div></div>
-      <div class="typing"><span></span><span></span><span></span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="flash-card">When adding fractions the denominators must match. Your problem is 3/4 + 1/2 — what does 1/2 need to become so both denominators equal 4? 🌟</div>
+        <div class="flash-card student">2/4?</div>
+        <div class="flash-card">Exactly right! Now you have 3/4 + 2/4. What do you get when you add the numerators? 🌟</div>
+        <div class="flash-card hint">💡 Only add the top numbers — the denominator stays the same.</div>
+      </div>
+      <div class="stars-bar" style="margin-top:12px;border-radius:10px;">
+        <span style="font-size:18px;">⭐</span><span style="font-size:18px;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span>
+        <span style="margin-left:auto;font-size:.7rem;font-weight:700;color:#92400e;">3 messages left</span>
+      </div>
+      <div class="chat-input-row" style="border-radius:0 0 14px 14px;">
+        <div class="mic-btn">🎤</div>
+        <div style="flex:1;background:#fff;border:1.5px solid rgba(3,105,161,.12);border-radius:10px;padding:9px 13px;font-size:.8rem;color:#94a3b8;font-family:'DM Sans',sans-serif;">Type or speak to Ollie...</div>
+        <div class="send-btn">➤</div>
+      </div>
     </div>
-    <div class="float-badge fb2">✅ Builds real, lasting understanding</div>
+    <div class="float-badge fb2">⭐ Earn Study Cards after every session</div>
   </div>
 </section>
 
@@ -1086,18 +1112,43 @@ body.logged-in #tryit {
     </div>
   </div>
 
-  <!-- Safety Cards -->
+  <!-- Features Section -->
   <div class="s-head" style="margin-bottom:40px;">
-    <div class="s-label">Parent Confidence First</div>
-    <div class="s-title">Built With Your Child's Safety at the Center</div>
+    <div class="s-label">Everything Included</div>
+    <div class="s-title">Built for Real Learning</div>
+    <p class="s-sub">Every feature is designed with one goal — helping the student genuinely understand, not just finish.</p>
   </div>
-  <div class="safety-grid">
-    <div class="scard"><div class="scard-icon-wrap" style="background:#dbeafe;">📚</div><h3>Academic Content Only</h3><p>Designed exclusively for age-appropriate homework questions. No personal, social, or non-academic conversations — ever.</p></div>
-    <div class="scard"><div class="scard-icon-wrap" style="background:#dcfce7;">🚫</div><h3>Answers Are Never Given</h3><p>Every response is a guiding question or structured hint. Academic integrity is preserved in every session.</p></div>
-    <div class="scard"><div class="scard-icon-wrap" style="background:#fef3c7;">👨‍👩‍👧</div><h3>Parents Stay Involved</h3><p>A support tool designed to work alongside parents — not replace them. Family involvement is always encouraged.</p></div>
-    <div class="scard"><div class="scard-icon-wrap" style="background:#f3e8ff;">🔒</div><h3>No Open Chat or Social Features</h3><p>No peer messaging or chatrooms. All interactions are strictly between the student and the academic coaching system.</p></div>
-    <div class="scard"><div class="scard-icon-wrap" style="background:#fee2e2;">🎓</div><h3>Grade-Level Calibrated</h3><p>Automatically adjusts to the selected grade — ensuring every response is developmentally appropriate.</p></div>
-    <div class="scard"><div class="scard-icon-wrap" style="background:#dcfce7;">❤️</div><h3>Always Warm and Encouraging</h3><p>Patient, positive, and age-appropriate in every interaction. Students are supported, never criticized.</p></div>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#dbeafe;">🧠</div>
+      <div class="feat-card-title">Socratic Method Teaching</div>
+      <div class="feat-card-desc">Ollie guides the student to discover answers through carefully structured questions — never by giving the answer directly. Research shows students retain 75% more when they arrive at answers themselves.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#d1fae5;">🎤</div>
+      <div class="feat-card-title">Hands Free Voice <span class="new-badge">NEW</span></div>
+      <div class="feat-card-desc">The student simply speaks their homework question aloud and Ollie delivers every response in clear spoken audio — ensuring students who struggle with reading comprehension can fully access every guided explanation without barriers.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#ede9fe;">📊</div>
+      <div class="feat-card-title">Progress Dashboard <span class="new-badge">NEW</span></div>
+      <div class="feat-card-desc">A real time academic progress report for students and parents. Students see their mastery level per subject. Parents see weekly study time, sessions completed, and subjects that need more attention.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#fef2f2;">🌱</div>
+      <div class="feat-card-title">Growth Areas <span class="new-badge">NEW</span></div>
+      <div class="feat-card-desc">As Ollie works with the student, it identifies topics where understanding needs strengthening. Each Growth Area includes a dedicated Practice Zone — a targeted academic session with Ollie designed to reinforce and deepen mastery of that specific concept through structured guided instruction.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#f0fdf4;">📖</div>
+      <div class="feat-card-title">Study Cards and Stars <span class="new-badge">NEW</span></div>
+      <div class="feat-card-desc">Students earn a star for every concept mastered during a session. After 5 stars Ollie automatically generates a personalized Study Card — a concise academic summary of key concepts and memory tips to review before the next test or exam.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#fef3c7;">🔒</div>
+      <div class="feat-card-title">Safe for Children</div>
+      <div class="feat-card-desc">Every conversation with Ollie is strictly limited to academic subjects. No advertisements, no off topic content, and no personal data collected from children. A structured, purposeful learning environment parents can trust completely.</div>
+    </div>
   </div>
 </section>
 
