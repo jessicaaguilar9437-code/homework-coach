@@ -824,16 +824,18 @@ body.logged-in #tryit {
     <li><a href="#features">Features</a></li>
     <li><a href="#compare">For Parents</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li id="navProgressBtn" style="display:none;"><a href="#" onclick="showProgressView();return false;" style="color:#0369a1;font-weight:700;">📊 My Progress</a></li>
-    <li><a href="#" onclick="openLoginModal();return false;" class="nav-login" id="navLoginBtn">Log In</a></li>
-    <li><a href="#tryit" class="nav-try-ollie"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:22px;height:22px;border-radius:50%;object-fit:cover;object-position:center top;vertical-align:middle;margin-right:4px;"> Try Ollie Free</a></li>
-    <li class="nav-user-badge" id="navUserBadge">
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="navProgressBtn" style="display:none;"><a href="#" onclick="showProgressView();return false;" style="color:#0369a1;font-weight:700;font-size:.86rem;text-decoration:none;">📊 My Progress</a></span>
+    <span class="nav-user-badge" id="navUserBadge">
       <span>✅</span>
       <span class="nav-user-email" id="navUserEmail"></span>
       <button class="nav-user-logout" onclick="handleLogout()">Log out</button>
-    </li>
-    <li id="navJoinBtn"><a href="https://buy.stripe.com/eVqaEX0Ck2F83Mg1gPenS02" target="_blank" class="nav-cta">Join The Homework Coach</a></li>
-  </ul>
+    </span>
+    <a href="#" onclick="openLoginModal();return false;" class="nav-login" id="navLoginBtn">Log In</a>
+    <a href="#tryit" class="nav-try-ollie"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:20px;height:20px;border-radius:50%;object-fit:cover;object-position:center top;vertical-align:middle;margin-right:4px;"> Try Ollie Free</a>
+    <a href="https://buy.stripe.com/eVqaEX0Ck2F83Mg1gPenS02" target="_blank" class="nav-cta" id="navJoinBtn">Join Now</a>
+  </div>
 </nav>
 
 <!-- FLOATING TRY OLLIE BUTTON — hidden when logged in -->
@@ -4803,7 +4805,7 @@ function updateUserStatusBar() {
 
     // Hide Try Ollie Free nav link
     const navTryOllie = document.querySelector('.nav-try-ollie');
-    if (navTryOllie) navTryOllie.parentElement.style.display = 'none';
+    if (navTryOllie) navTryOllie.style.display = 'none';
 
     // Hide free trial badge when logged in
     const freeBadge = document.getElementById('freeBadge');
@@ -4853,7 +4855,7 @@ function updateUserStatusBar() {
     const floatingBtn = document.getElementById('floatingOllieBtn');
     if (floatingBtn) floatingBtn.style.display = '';
     const navTryOllie = document.querySelector('.nav-try-ollie');
-    if (navTryOllie) navTryOllie.parentElement.style.display = '';
+    if (navTryOllie) navTryOllie.style.display = '';
 
     // Hide logged in banner
     const banner = document.getElementById('loggedInBanner');
