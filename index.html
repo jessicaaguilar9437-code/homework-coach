@@ -4457,14 +4457,71 @@ async function generateStudyCard() {
   const topic = detected.topic || currentSubject;
   const grade = gradeLevel || 'Grade 7';
 
-  // Ask Ollie to generate study card content
+  // --- Fetch existing cards so GPT knows what's already covered ---
+  let existingTopics = [];
+  if (currentUser) {
+    try {
+      const { data: existingCards } = await sbClient
+        .from('study_cards')
+        .select('topic, concepts')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (existingCards && existingCards.length > 0) {
+        existingTopics = existingCards.map(c =>
+          `"${c.topic}": ${(c.concepts || []).slice(0, 2).join(' | ')}`
+        );
+      }
+    } catch(e) {}
+  }
+
+  // --- Find struggle moments: places where student got hints or corrections ---
+  const struggleMoments = [];
+  for (let i = 1; i < history.length; i++) {
+    const msg = history[i];
+    if (msg.role === 'assistant') {
+      const lower = msg.content.toLowerCase();
+      const isStruggle = lower.includes('hint') || lower.includes('not quite') ||
+        lower.includes('try again') || lower.includes("that's not") ||
+        lower.includes('incorrect') || lower.includes('let me help') ||
+        lower.includes('close, but') || lower.includes('almost') ||
+        (lower.includes('remember') && lower.includes('?'));
+      if (isStruggle) {
+        const studentMsg = history[i - 1]?.role === 'user' ? history[i - 1].content : '';
+        if (studentMsg && studentMsg.length < 300) {
+          struggleMoments.push(
+            `Student: "${studentMsg.slice(0, 120)}" → Ollie: "${msg.content.slice(0, 150)}"`
+          );
+        }
+      }
+    }
+  }
+  const struggleText = struggleMoments.length > 0
+    ? `\nWHERE THE STUDENT STRUGGLED (use these to build the card):\n${struggleMoments.slice(0, 4).join('\n')}`
+    : '';
+
+  const existingText = existingTopics.length > 0
+    ? `\nCARDS ALREADY SAVED (do NOT repeat or rephrase any of these concepts — each new card must cover something genuinely different):\n${existingTopics.join('\n')}`
+    : '';
+
   const cardPrompt = `[STUDY CARD GENERATION — INTERNAL]
-Based on our session, generate a study card for the student. Respond ONLY with a JSON object in this exact format, nothing else:
+Generate a study card focused on what this student found DIFFICULT today — not a general topic summary.
+${struggleText}
+${existingText}
+
+RULES:
+- Pull concepts directly from the struggle moments above, not from general knowledge of the subject
+- If no struggle moments were logged, choose the most specific sub-skill practiced today
+- Every concept must be distinct and teach something NEW not already on an existing card
+- The memory tip must be tied to a specific mistake or confusion from this session
+- Topics must be granular (e.g. "Subtracting fractions with unlike denominators", not just "Fractions")
+
+Respond ONLY with valid JSON, nothing else:
 {
-  "topic": "${topic}",
+  "topic": "Specific sub-skill the student struggled with today",
   "subject": "${detected.subject || currentSubject}",
-  "concepts": ["concept 1 in one clear sentence", "concept 2 in one clear sentence", "concept 3 in one clear sentence"],
-  "memoryTip": "one simple memorable analogy or trick from our session"
+  "concepts": ["concept tied to a real struggle moment", "a second distinct concept they need more practice on", "a third new concept not on any existing card"],
+  "memoryTip": "one memorable trick or analogy tied to where they got stuck today"
 }`;
 
   try {
@@ -4472,8 +4529,11 @@ Based on our session, generate a study card for the student. Respond ONLY with a
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: 'You generate study cards as JSON only. No prose. No explanation. Only valid JSON.',
-        messages: [{ role: 'user', content: cardPrompt }],
+        system: 'You generate study cards as JSON only. No prose. No explanation. Only valid JSON. Cards must focus on struggle points and must never repeat concepts already on existing cards.',
+        messages: [
+          ...history.slice(-14),
+          { role: 'user', content: cardPrompt }
+        ],
         grade: grade,
         subject: detected.subject || currentSubject
       })
@@ -4484,16 +4544,15 @@ Based on our session, generate a study card for the student. Respond ONLY with a
     const card = JSON.parse(clean);
     showStudyCard(card, grade);
   } catch(e) {
-    // Fallback card if generation fails
     showStudyCard({
       topic: topic,
       subject: detected.subject || currentSubject,
       concepts: [
-        'Review your notes from this session to reinforce what you learned.',
-        'Practice similar problems to build confidence.',
-        'Ask your teacher if you need more help with this topic.'
+        'Review the specific problems you found hardest in this session.',
+        'Practice similar problems until the steps feel automatic.',
+        'Write down any questions to ask your teacher tomorrow.'
       ],
-      memoryTip: 'Break complex problems into smaller steps — one step at a time!'
+      memoryTip: 'The questions that felt hardest today are exactly what to study first!'
     }, grade);
   }
 }
@@ -4549,6 +4608,19 @@ async function saveStudyCard(card, grade, btn) {
 
   if (currentUser) {
     try {
+      // Block exact-duplicate topic saves
+      const { data: existing } = await sbClient
+        .from('study_cards')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .ilike('topic', card.topic.trim())
+        .limit(1);
+      if (existing && existing.length > 0) {
+        btn.textContent = '✅ Already saved!';
+        btn.style.background = '#94a3b8';
+        return;
+      }
+
       const { error: insertErr } = await sbClient.from('study_cards').insert({
         user_id: currentUser.id,
         subject: card.subject,
@@ -4699,6 +4771,7 @@ let visitorFingerprint = null;
 // The paywall will show AFTER we confirm user is not subscribed
 
 let authMode = 'login';
+let pendingPasswordSetup = false;
 
 // Initialize auth on page load
 async function initAuth() {
@@ -4718,6 +4791,9 @@ async function initAuth() {
     linkType === 'signup'
   );
 
+  // Store at module scope so onAuthStateChange fallback can use it if getSession() returns null
+  pendingPasswordSetup = needsPassword;
+
   const { data: { session } } = await sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
@@ -4727,14 +4803,15 @@ async function initAuth() {
     // Check if student has an unfinished session to resume
     setTimeout(() => checkForSavedConversation(), 1000);
     if (paymentSuccess && isSubscribed) { hidePaywall(); enableChat(); }
-    if (needsPassword) {
+    if (pendingPasswordSetup) {
+      pendingPasswordSetup = false;
       window.history.replaceState({}, '', window.location.pathname);
       setTimeout(() => {
         document.getElementById('setPasswordModal').style.display = 'flex';
       }, 800);
     }
   } else {
-    if (paymentSuccess) {
+    if (paymentSuccess && !pendingPasswordSetup) {
       document.getElementById('paymentSuccessModal').style.display = 'flex';
     } else if (freeMessageCount > FREE_MESSAGE_LIMIT) {
       showPaywall();
@@ -4985,7 +5062,7 @@ async function sendMagicLink() {
   errorEl.style.display = 'none'; successEl.style.display = 'none';
   if (!email) { errorEl.textContent = 'Please enter your email.'; errorEl.style.display = 'block'; return; }
   btn.textContent = 'Sending...'; btn.disabled = true;
-  const { error } = await sbClient.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/?payment=success' } });
+  const { error } = await sbClient.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://thehomeworkcoach.org/' } });
   if (error) { errorEl.textContent = 'Could not send. Please try again.'; errorEl.style.display = 'block'; }
   else { successEl.textContent = 'Magic link sent! Check your email to log in.'; successEl.style.display = 'block'; }
   btn.textContent = 'Send Magic Link →'; btn.disabled = false;
@@ -5274,43 +5351,21 @@ async function setNewPassword() {
   }
 }
 
-function checkIfMagicLinkLogin() {
-  // Check URL hash for any Supabase auth token
-  const hash = window.location.hash;
-  
-  // Supabase puts access_token in hash for all magic/invite/recovery links
-  if (hash && hash.includes('access_token')) {
-    // Parse the hash to get the type
-    const hashParams = new URLSearchParams(hash.replace('#', ''));
-    const type = hashParams.get('type');
-    
-    // Show set password modal for invite, recovery, magiclink types
-    if (type === 'invite' || type === 'recovery' || type === 'magiclink' || type === 'signup') {
-      // Clean URL first
-      window.history.replaceState({}, '', window.location.pathname);
-      // Show modal after short delay to let auth complete
-      setTimeout(() => {
-        document.getElementById('setPasswordModal').style.display = 'flex';
-      }, 800);
-    }
-  }
-}
-
-// Listen for Supabase auth state changes to catch password recovery
+// Listen for Supabase auth state changes — catches delayed session establishment from magic/invite links
 sbClient.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
     setTimeout(() => {
       document.getElementById('setPasswordModal').style.display = 'flex';
     }, 500);
   }
-  if (event === 'SIGNED_IN' && session) {
-    // Check if this is a fresh invite/magic link login
-    const hash = window.location.hash;
-    if (hash && hash.includes('type=invite')) {
-      setTimeout(() => {
-        document.getElementById('setPasswordModal').style.display = 'flex';
-      }, 800);
-    }
+  // Fallback: if getSession() in initAuth() returned null due to async token exchange,
+  // pendingPasswordSetup will still be true when SIGNED_IN fires here
+  if (event === 'SIGNED_IN' && session && pendingPasswordSetup) {
+    pendingPasswordSetup = false;
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => {
+      document.getElementById('setPasswordModal').style.display = 'flex';
+    }, 800);
   }
 });
 
