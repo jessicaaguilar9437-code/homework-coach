@@ -818,12 +818,20 @@ body.logged-in #tryit {
       <div class="nav-brand-name">The Homework Coach<small>Structured Guidance · 3rd through 9th grade</small></div>
     </div>
   </a>
-  <ul class="nav-links">
+  <ul class="nav-links" id="marketingNavLinks">
     <li><a href="#how">How It Works</a></li>
     <li><a href="#subjects">Subjects</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#compare">For Parents</a></li>
     <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <!-- App-mode nav — shown only when student is logged in -->
+  <ul class="nav-links" id="appNavLinks" style="display:none;">
+    <li><a href="#tryit">🐾 Ask Ollie</a></li>
+    <li><a href="#" onclick="showProgressView();return false;">📊 My Progress</a></li>
+    <li><a href="#" onclick="showProgressView();setTimeout(function(){switchDashTab('quiz',document.querySelector('.dash-tab[onclick*=quiz]'));},400);return false;">⭐ Smart Quiz</a></li>
+    <li><a href="#" onclick="showProgressView();setTimeout(function(){switchDashTab('cards',document.querySelector('.dash-tab[onclick*=cards]'));},400);return false;">📖 My Cards</a></li>
+    <li><a href="#" onclick="showProgressView();setTimeout(function(){var el=document.getElementById('growthAreasList');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},500);return false;">🌱 Growth Areas</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px;">
     <span id="navProgressBtn" style="display:none;"><a href="#" onclick="showProgressView();return false;" style="color:#0369a1;font-weight:700;font-size:.86rem;text-decoration:none;">📊 My Progress</a></span>
@@ -4892,9 +4900,15 @@ function updateUserStatusBar() {
     const progressTabBtn = document.getElementById('progressTabBtn');
     if (progressTabBtn) progressTabBtn.style.display = 'block';
 
-    // Show My Progress nav link
+    // Hide the standalone My Progress span — it's now inside the app nav
     const navProgress = document.getElementById('navProgressBtn');
-    if (navProgress) navProgress.style.display = 'block';
+    if (navProgress) navProgress.style.display = 'none';
+
+    // Swap marketing nav for app nav
+    const marketingNavLinks = document.getElementById('marketingNavLinks');
+    if (marketingNavLinks) marketingNavLinks.style.display = 'none';
+    const appNavLinks = document.getElementById('appNavLinks');
+    if (appNavLinks) appNavLinks.style.display = 'flex';
 
     // Hide floating button
     const floatingBtn = document.getElementById('floatingOllieBtn');
@@ -4937,7 +4951,13 @@ function updateUserStatusBar() {
     // Hide logged in banner
     const banner = document.getElementById('loggedInBanner');
     if (banner) banner.style.display = 'none';
-    
+
+    // Restore marketing nav, hide app nav
+    const marketingNavLinks = document.getElementById('marketingNavLinks');
+    if (marketingNavLinks) marketingNavLinks.style.display = 'flex';
+    const appNavLinks = document.getElementById('appNavLinks');
+    if (appNavLinks) appNavLinks.style.display = 'none';
+
     // Remove app mode — show marketing site
     document.body.classList.remove('logged-in');
   }
