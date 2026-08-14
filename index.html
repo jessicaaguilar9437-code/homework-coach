@@ -101,7 +101,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .floating-ollie-btn{position:fixed;bottom:30px;right:30px;z-index:9999;background:linear-gradient(135deg,#6ee7b7,#34d399);color:white;padding:14px 22px;border-radius:50px;font-weight:700;font-size:.9rem;text-decoration:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(52,211,153,.5);transition:all .3s;animation:floatPulse 2s infinite;}
 .floating-ollie-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(52,211,153,.6);}
 @keyframes floatPulse{0%,100%{box-shadow:0 4px 20px rgba(52,211,153,.5);}50%{box-shadow:0 4px 30px rgba(52,211,153,.8);}}
-@media(max-width:800px){.nav-links{display:none;}}
+@media(max-width:800px){
+  .nav-links{display:none!important;}
+  nav{padding:0 4%;height:62px;}
+  .nav-logo-icon{width:42px;height:42px;}
+  .nav-brand-name{font-size:.88rem;}
+  .nav-brand-name small{display:none;}
+  /* Hide Try Ollie Free — floating button + hero handle this on mobile */
+  .nav-try-ollie{display:none!important;}
+  /* Compact Log In and Join Now buttons */
+  .nav-login{padding:7px 12px!important;font-size:.76rem!important;}
+  .nav-cta{padding:7px 12px!important;font-size:.76rem!important;}
+  /* User badge — hide email, just show checkmark + Log out */
+  .nav-user-badge{padding:6px 10px!important;font-size:.75rem!important;gap:4px!important;}
+  .nav-user-email{display:none!important;}
+  /* Tighten button gap */
+  nav > div{gap:6px!important;}
+}
 
 /* ── HERO ── */
 .hero{min-height:100vh;padding:110px 5% 80px;display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center;position:relative;overflow:hidden;background:linear-gradient(160deg,#ffffff 0%,#f0f9ff 100%);}
