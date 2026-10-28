@@ -3387,6 +3387,184 @@ function removeTyping() {
   if (t) t.remove();
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// OLLIE FIX: login token for the Worker + CODE-GRADED QUIZZES
+// The answer key lives in code. Ollie writes the questions,
+// a second check re-solves them, and the page grades the taps.
+// ═══════════════════════════════════════════════════════════
+const OLLIE_WORKER_URL = 'https://homework-coach-proxy.jessicaaguilar3.workers.dev';
+
+async function ollieHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  try {
+    const { data: { session } } = await sbClient.auth.getSession();
+    if (session && session.access_token) h['Authorization'] = 'Bearer ' + session.access_token;
+  } catch (e) {}
+  return h;
+}
+
+function quizEsc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function ollieCall(system, userText, opts) {
+  opts = opts || {};
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), opts.timeout || 60000);
+  try {
+    const res = await fetch(OLLIE_WORKER_URL, {
+      method: 'POST', headers: await ollieHeaders(), signal: controller.signal,
+      body: JSON.stringify({
+        system, messages: [{ role: 'user', content: userText }],
+        grade: gradeLevel, subject: opts.subject || currentSubject, fingerprint: visitorFingerprint,
+        maxTokens: opts.maxTokens, json: !!opts.json, calc: opts.calc !== false
+      })
+    });
+    const data = await res.json();
+    if (res.status === 429 || (data && data.error === 'limit_reached')) { showPaywall(); return null; }
+    return (data && data.content && data.content[0] && data.content[0].text) || null;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+
+function quizParseJSON(text) {
+  if (!text) return null;
+  try { return JSON.parse(text.replace(/```json|```/g, '').trim()); } catch (e) { return null; }
+}
+
+function quizValid(q) {
+  if (!q || typeof q.q !== 'string' || !Array.isArray(q.options) || q.options.length !== 4) return false;
+  const opts = q.options.map(o => String(o).trim());
+  if (opts.some(o => !o) || new Set(opts.map(o => o.toLowerCase())).size !== 4) return false;
+  if (opts.some(o => /^(all|none) of the above$/i.test(o))) return false;
+  return Number.isInteger(q.answer) && q.answer >= 0 && q.answer <= 3;
+}
+
+function quizShuffle(q) {
+  const idx = [0, 1, 2, 3];
+  for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  return { ...q, options: idx.map(i => String(q.options[i]).trim()), answer: idx.indexOf(q.answer) };
+}
+
+async function buildVerifiedQuiz(cfg) {
+  const grade = gradeLevel || 'Grade 7';
+  const subj = cfg.kind === 'smart' ? 'Mixed subjects (includes Mathematics)' : cfg.subject;
+  const extra = Math.min(2, Math.ceil(cfg.count / 4));
+  const genSystem = 'You write multiple-choice quiz questions for school students. Output valid JSON only, no commentary. Every question has exactly 4 distinct options and exactly ONE correct option. Questions must be factually accurate, unambiguous and suitable for the grade. Never use "all of the above" or "none of the above". Keep wording short and clear.';
+  const genUser = `Grade level: ${grade}\n${cfg.context}\nWrite ${cfg.count + extra} questions.\nReturn JSON exactly like: {"questions":[{"q":"question text","options":["A text","B text","C text","D text"],"answer":0,"explanation":"one short sentence on why the correct option is right","subject":"subject name","topic":"specific topic"}]}\n"answer" is the 0-based index of the correct option.`;
+  const raw = await ollieCall(genSystem, genUser, { json: true, maxTokens: 3500, timeout: 70000, subject: subj });
+  const parsed = quizParseJSON(raw);
+  let qs = ((parsed && parsed.questions) || []).filter(quizValid);
+  if (qs.length < 3) return null;
+
+  // Second check: a separate call re-solves every question WITHOUT seeing the answer key.
+  const solveSystem = 'You are a careful, accurate exam solver. For each question choose the single best option. Output valid JSON only.';
+  const solveUser = 'Solve these questions.\n' + qs.map((q, i) => `${i + 1}. ${q.q}\n` + q.options.map((o, k) => `${'ABCD'[k]}) ${o}`).join('\n')).join('\n\n') +
+    `\n\nReturn JSON exactly like: {"answers":[0,2,1]} — one 0-based option index per question, in order (${qs.length} numbers).`;
+  const solved = quizParseJSON(await ollieCall(solveSystem, solveUser, { json: true, maxTokens: 400, timeout: 45000, subject: subj }));
+  if (solved && Array.isArray(solved.answers) && solved.answers.length === qs.length) {
+    const agreed = qs.filter((q, i) => solved.answers[i] === q.answer);
+    if (agreed.length >= Math.min(cfg.count, 3)) qs = agreed;
+  }
+  return qs.slice(0, cfg.count).map(quizShuffle);
+}
+
+let codeQuiz = null;
+
+async function runCodeQuiz(cfg) {
+  if (codeQuiz && codeQuiz.active) return;
+  appendMsgQuiet('bot', 'Ollie is writing your quiz… this takes a few seconds. ✏️');
+  showTyping();
+  const qs = await buildVerifiedQuiz(cfg);
+  removeTyping();
+  if (!qs || !qs.length) {
+    appendMsgQuiet('bot', "Ollie couldn't build your quiz just now. Please tap the quiz button again in a moment.");
+    return;
+  }
+  codeQuiz = { active: true, cfg, questions: qs, i: 0, score: 0, missed: [] };
+  renderCodeQuizQuestion();
+}
+
+function renderCodeQuizQuestion() {
+  const cq = codeQuiz, q = cq.questions[cq.i], n = cq.questions.length;
+  const container = document.getElementById('cbMsgs');
+  const div = document.createElement('div'); div.className = 'cmsg bot';
+  const av = document.createElement('div'); av.className = 'cmsg-av'; av.innerHTML = puzzleSVG;
+  const bubble = document.createElement('div'); bubble.className = 'cbubble';
+  const head = document.createElement('strong'); head.textContent = `Question ${cq.i + 1} of ${n}`;
+  const body = document.createElement('div'); body.style.cssText = 'margin:6px 0 10px;'; body.textContent = q.q;
+  const opts = document.createElement('div'); opts.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+  q.options.forEach((o, k) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'ABCD'[k] + ') ' + o; b.dataset.k = k;
+    b.style.cssText = 'text-align:left;padding:10px 12px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;font:inherit;cursor:pointer;';
+    b.onclick = () => answerCodeQuiz(k, opts);
+    opts.appendChild(b);
+  });
+  bubble.appendChild(head); bubble.appendChild(body); bubble.appendChild(opts);
+  div.appendChild(av); div.appendChild(bubble); container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function answerCodeQuiz(k, optsEl) {
+  const cq = codeQuiz; if (!cq || optsEl.dataset.done) return;
+  optsEl.dataset.done = '1';
+  const q = cq.questions[cq.i], right = k === q.answer;
+  [...optsEl.querySelectorAll('button')].forEach(b => {
+    b.disabled = true; b.style.cursor = 'default';
+    const bk = +b.dataset.k;
+    if (bk === q.answer) { b.style.borderColor = '#16a34a'; b.style.background = '#dcfce7'; }
+    else if (bk === k) { b.style.borderColor = '#dc2626'; b.style.background = '#fee2e2'; }
+  });
+  sessionMessageCount = (sessionMessageCount || 0) + 1;
+  const why = q.explanation ? ' ' + quizEsc(q.explanation) : '';
+  if (right) {
+    cq.score++;
+    appendMsgQuiet('bot', '✅ **Exactly right!**' + why);
+    try { awardStar(); } catch (e) {}
+  } else {
+    sessionStruggleCount = (sessionStruggleCount || 0) + 1;
+    cq.missed.push({ q: q.q, correct: q.options[q.answer], chose: q.options[k] });
+    appendMsgQuiet('bot', `❌ **Not quite.** The correct answer was **${'ABCD'[q.answer]}) ${quizEsc(q.options[q.answer])}**.` + why);
+  }
+  const last = cq.i === cq.questions.length - 1;
+  const next = document.createElement('button');
+  next.type = 'button'; next.textContent = last ? 'See my score →' : 'Next question →';
+  next.style.cssText = 'margin:4px 0 8px 52px;padding:10px 16px;border:0;border-radius:10px;background:#0369a1;color:#fff;font:inherit;font-weight:700;cursor:pointer;';
+  next.onclick = () => { next.remove(); if (last) finishCodeQuiz(); else { cq.i++; renderCodeQuizQuestion(); } };
+  const c = document.getElementById('cbMsgs'); c.appendChild(next); c.scrollTop = c.scrollHeight;
+}
+
+async function finishCodeQuiz() {
+  const cq = codeQuiz; cq.active = false;
+  const n = cq.questions.length, score = cq.score, pct = score / n;
+  const praise = pct >= 0.8 ? 'Outstanding work! 🌟' : pct >= 0.5 ? 'Good effort — you are getting there! 💪' : 'Great try — every quiz helps your brain grow! 🧠';
+  const tail = cq.missed.length ? '\n\nWant to go over the ones you missed? Just tell Ollie which question number and we will work through it together.' : '';
+  appendMsgQuiet('bot', `🎉 **You scored ${score} out of ${n}!** ${praise}${tail}`);
+  try { if (pct >= 0.8) triggerConfetti(); } catch (e) {}
+
+  // Let Ollie know the results so follow-up chat is relevant (not shown to the student)
+  const missedTxt = cq.missed.map((m, i) => `- ${m.q} (correct answer: ${m.correct}; student chose: ${m.chose})`).join('\n');
+  history.push({ role: 'user', content: 'I finished the quiz.' });
+  history.push({ role: 'assistant', content: `The student scored ${score} out of ${n} on a quiz.` + (missedTxt ? ` Questions missed:\n${missedTxt}\nIf the student asks about one, guide them with questions — do not just state the answer.` : '') });
+
+  if (cq.cfg.kind === 'growth') { try { await applyGrowthQuizScore(score); } catch (e) { console.error(e); } }
+  else if (currentUser) { try { await saveSessionData(); } catch (e) {} }
+  try { saveConversationToStorage(); } catch (e) {}
+}
+
+// ── Report a wrong answer (thumbs-down) → saved for the owner to review ──
+async function reportMistake() {
+  try {
+    const recent = (history || []).slice(-6).map(m => ({ role: m.role, content: String(m.content).slice(0, 1500) }));
+    await sbClient.from('mistake_reports').insert({
+      user_id: currentUser ? currentUser.id : null,
+      grade: gradeLevel || null, subject: currentSubject || null,
+      bot_reply: (lastBotMessage || '').slice(0, 3000), conversation: recent
+    });
+  } catch (e) { console.log('Mistake report not saved:', e); }
+}
+
 async function sendMsg() {
   const input = document.getElementById('cbInput');
   const sendBtn = document.getElementById('cbSend');
@@ -3424,15 +3602,14 @@ async function sendMsg() {
       const timeout = setTimeout(() => controller.abort(), 25000);
       const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await ollieHeaders(),
         signal: controller.signal,
         body: JSON.stringify({
           system: getSystemPrompt(),
           messages: history,
           grade: gradeLevel,
           subject: currentSubject,
-          fingerprint: visitorFingerprint,
-          subscribed: isSubscribed
+          fingerprint: visitorFingerprint
         })
       });
       clearTimeout(timeout);
@@ -4021,12 +4198,9 @@ SMART QUIZ FORMAT — FOLLOW EXACTLY:
   activateFullscreenWorkspace(currentSubject, currentSubject, gradeLevel || 'Grade 7', icon);
 
   setTimeout(() => {
-    // Push quiz context silently to history — don't show instructions in chat
-    history.push({ role: 'user', content: quizMessage });
-    // Show a clean friendly message in chat instead
     appendMsg('user', '⭐ Start my Smart Quiz!');
-    // Get Ollie's first question directly
-    sendMsgToOllie();
+    runCodeQuiz({ kind: 'smart', subject: currentSubject, topic: 'Smart Quiz', count: 10,
+      context: `Mix the subjects. About 60% of questions from these weak topics:\n${growthText || 'None yet'}\nAbout 40% from these other studied topics:\n${allTopicsText || 'None yet'}\nThis is quiz session #${totalSessions + 1}, so vary the questions. Lower-mastery topics get slightly easier questions.` });
   }, 600);
 }
 
@@ -4075,9 +4249,9 @@ FORMAT — FOLLOW EXACTLY:
   activateFullscreenWorkspace(subject, subject, gradeLevel || 'Grade 3', icon);
 
   setTimeout(() => {
-    history.push({ role: 'user', content: quizMsg });
     appendMsg('user', `🎯 Quiz me on ${topic}!`);
-    sendMsgToOllie();
+    runCodeQuiz({ kind: 'growth', subject, topic, count: 5,
+      context: `Subject: ${subject}. Topic: "${topic}" only. Start easy and get slightly harder each question (student mastery ${masteryPct}%). This is practice attempt #${struggleCount + 1}, so vary the questions.` });
   }, 600);
 }
 
@@ -4088,10 +4262,15 @@ async function checkGrowthQuizComplete(text) {
   if (!scoreMatch) return;
 
   const score = parseInt(scoreMatch[1] || scoreMatch[2] || scoreMatch[3]);
+  return applyGrowthQuizScore(score);
+}
+
+async function applyGrowthQuizScore(score) {
+  if (!currentGrowthQuiz || !currentUser) return;
   const { subject, topic, struggleCount, masteryPct } = currentGrowthQuiz;
   currentGrowthQuiz = null;
 
-  const passed = score >= 4;
+  const passed = score >= 4;   // 4 of 5 or better resolves the growth area
   const masteryGain = passed ? 20 : Math.max(5, score * 4);
   const newMastery = Math.min(100, (masteryPct || 0) + masteryGain);
 
@@ -4551,7 +4730,7 @@ Respond ONLY with valid JSON, nothing else:
   try {
     const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await ollieHeaders(),
       body: JSON.stringify({
         system: 'You generate study cards as JSON only. No prose. No explanation. Only valid JSON. Cards must focus on struggle points and must never repeat concepts already on existing cards.',
         messages: [
@@ -4559,7 +4738,9 @@ Respond ONLY with valid JSON, nothing else:
           { role: 'user', content: cardPrompt }
         ],
         grade: grade,
-        subject: detected.subject || currentSubject
+        subject: detected.subject || currentSubject,
+        fingerprint: visitorFingerprint,
+        calc: false
       })
     });
     const data = await res.json();
@@ -5038,15 +5219,14 @@ async function sendMsgToOllie() {
       const timeout = setTimeout(() => controller.abort(), 25000);
       const res = await fetch('https://homework-coach-proxy.jessicaaguilar3.workers.dev', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await ollieHeaders(),
         signal: controller.signal,
         body: JSON.stringify({
           system: getSystemPrompt(),
           messages: history,
           grade: gradeLevel,
           subject: currentSubject,
-          fingerprint: visitorFingerprint,
-          subscribed: isSubscribed
+          fingerprint: visitorFingerprint
         })
       });
       clearTimeout(timeout);
@@ -5209,25 +5389,54 @@ async function speakText(text, btn) {
       };
       audio.onended = done;
       audio.onerror = done;
-      audio.play();
-      return;
+      try {
+        await audio.play();
+        return;
+      } catch (_) {
+        // Browser blocked playback (common on iPhone) — use the browser voice below
+        URL.revokeObjectURL(url);
+        _currentAudio = null;
+      }
     }
   } catch (_) {}
 
-  // Fallback: browser voice
-  const voices = window.speechSynthesis.getVoices();
-  const voice = voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
-    || voices.find(v => v.name === 'Samantha')
-    || voices.find(v => v.lang === 'en-US')
-    || null;
+  // Fallback: browser voice — warm, friendly, energetic young female voice (grades 3–9)
+  const pickOllieVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    return voices.find(v => v.name === 'Microsoft Aria Online (Natural) - English (United States)')
+      || voices.find(v => v.name === 'Samantha')
+      || voices.find(v => v.name === 'Google US English')
+      || voices.find(v => v.name === 'Google US English Female')
+      || voices.find(v => v.name === 'Karen')
+      || voices.find(v => v.name === 'Victoria')
+      || voices.find(v => v.name === 'Microsoft Zira - English (United States)')
+      || voices.find(v => v.lang === 'en-US' && /female|woman/i.test(v.name))
+      || voices.find(v => v.lang === 'en-US')
+      || voices.find(v => v.lang.startsWith('en'))
+      || null;
+  };
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.rate = 1.05;
+  utterance.rate   = 1.1;   // upbeat and energetic — not rushed
+  utterance.pitch  = 1.5;   // warm, young, happy feel
   utterance.volume = 1;
-  if (voice) utterance.voice = voice;
   const done = () => { btn.classList.remove('playing', 'was-playing'); btn.innerHTML = '🔊'; };
   utterance.onend = done;
   utterance.onerror = done;
-  window.speechSynthesis.speak(utterance);
+
+  const voice = pickOllieVoice();
+  if (voice) utterance.voice = voice;
+
+  // Voices load async on first visit — wait and retry once
+  if (!voice && window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      const v = pickOllieVoice();
+      if (v) utterance.voice = v;
+      window.speechSynthesis.onvoiceschanged = null;
+      window.speechSynthesis.speak(utterance);
+    };
+  } else {
+    window.speechSynthesis.speak(utterance);
+  }
 }
 
 // ── CONVERSATION SAVE / RESTORE ──
@@ -5491,6 +5700,7 @@ function submitFeedback(type) {
     downBtn.classList.add('selected-down');
     thanks.textContent = 'Thank you! Your feedback helps us improve Ollie. 🧩';
     // Log the problematic response for review
+    reportMistake();
     console.log('FEEDBACK - Needs improvement:', {
       grade: gradeLevel,
       subject: currentSubject,
