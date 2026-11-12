@@ -142,7 +142,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 .trust-icon{width:26px;height:26px;background:var(--green-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
 
 /* Hero visual card */
-.hero-visual{position:relative;display:flex;align-items:center;justify-content:center;}
+.hero-visual{position:relative;padding:56px 0;display:flex;align-items:center;justify-content:center;}
 .hero-card{background:var(--white);border-radius:26px;padding:26px;box-shadow:var(--shadow-xl);width:100%;max-width:390px;border:1.5px solid rgba(3,105,161,.09);animation:floatUp 7s ease-in-out infinite;}
 @keyframes floatUp{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
 .hcard-head{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1.5px solid #bae6fd;margin-bottom:18px;}
@@ -177,8 +177,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:70px;background:rgba
 @media(max-width:700px){.feat-grid{grid-template-columns:1fr;}}
 @keyframes td{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-7px);}}
 .float-badge{position:absolute;background:var(--white);border-radius:14px;padding:10px 16px;box-shadow:var(--shadow);border:1.5px solid rgba(3,105,161,.1);font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:7px;color:#0369a1;white-space:nowrap;}
-.fb1{top:-16px;right:-24px;animation:floatUp 5s ease-in-out infinite 1s;}
-.fb2{bottom:16px;left:-24px;color:var(--green);animation:floatUp 5s ease-in-out infinite 2.2s;}
+.fb1{top:-50px;right:0;z-index:3;animation:floatUp 5s ease-in-out infinite 1s;}
+.fb2{bottom:-50px;left:0;z-index:3;color:var(--green);animation:floatUp 5s ease-in-out infinite 2.2s;}
+
+.pdh-stats{display:flex;gap:8px;margin-bottom:14px;}
+.pdh-stats div{flex:1;background:#f0f9ff;border-radius:12px;padding:10px 4px;text-align:center;}
+.pdh-stats b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.35rem;color:#0369a1;}
+.pdh-stats span{font-size:.66rem;color:#567;font-weight:600;}
+.pdh-title{font-weight:700;font-size:.85rem;color:#1d2d5a;margin:4px 0 6px;}
+.pdh-row{display:flex;justify-content:space-between;font-size:.74rem;color:#567;font-weight:600;}
+.pdh-bar{height:9px;background:#e3edf4;border-radius:5px;margin:3px 0 10px;overflow:hidden;}
+.pdh-bar i{display:block;height:100%;background:linear-gradient(90deg,#0369a1,#0ea5e9);border-radius:5px;}
+.pdh-grow{background:#fff7e6;border-radius:10px;padding:9px 12px;font-size:.78rem;color:#7a4b00;margin-top:4px;}
+.pdh-samp{font-size:.66rem;color:#789;text-align:right;margin-top:8px;}
+@media(max-width:900px){.hero-visual{display:flex!important;padding:62px 0 62px!important;}.hero-card{max-width:420px;}.fb1{right:0;}.fb2{left:0;}}
 @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:105px;}.hero-visual{display:none;}}
 
 /* ── HOW IT WORKS ── */
@@ -900,7 +912,7 @@ html,body{max-width:100%;overflow-x:hidden;}
 <section class="hero marketing-section" id="heroSection">
   <div>
     <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Trusted Academic Support · 3rd through 9th grade</div>
-    <h1>Meet Ollie, the AI Homework Tutor for Grades 3–9 <span>Who Never Rushes</span></h1>
+    <h1>Meet Ollie, the AI Tutor for Grades 3–9 <span>With Progress Parents Can See</span></h1>
     <p class="hero-sub">The Homework Coach provides on-demand, step-by-step academic guidance that teaches your child how to think through assignments independently — without expensive tutors or instant-answer dependency.</p>
     <div style="display:inline-flex;align-items:center;gap:8px;background:#0369a1;border:1px solid #0369a1;border-radius:50px;padding:8px 18px;margin-bottom:8px;">
       <span style="font-size:1rem;">🎯</span>
@@ -919,29 +931,25 @@ html,body{max-width:100%;overflow-x:hidden;}
   </div>
   <div class="hero-visual">
     <div class="float-badge fb1">📊 Track student progress in real time</div>
-    <div class="hero-card">
+    <div class="hero-card" aria-label="Sample parent progress dashboard">
       <div class="hcard-head">
-        <div class="hcard-av" style="background:#dbeafe;"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;"></div>
+        <div class="hcard-av" style="background:#dbeafe;"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;"></div>
         <div>
-          <h4>The Homework Coach</h4>
-          <p>● Active · Guiding · Never answers directly</p>
+          <h4>Parent Progress Dashboard</h4>
+          <p>● Sample preview</p>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="flash-card">When adding fractions the denominators must match. Your problem is 3/4 + 1/2 — what does 1/2 need to become so both denominators equal 4? 🌟</div>
-        <div class="flash-card student">2/4?</div>
-        <div class="flash-card">Exactly right! Now you have 3/4 + 2/4. What do you get when you add the numerators? 🌟</div>
-        <div class="flash-card hint">💡 Only add the top numbers — the denominator stays the same.</div>
+      <div class="pdh-stats">
+        <div><b>12</b><span>Sessions completed</span></div>
+        <div><b>5.4h</b><span>Study time</span></div>
+        <div><b>82%</b><span>Average mastery</span></div>
       </div>
-      <div class="stars-bar" style="margin-top:12px;border-radius:10px;">
-        <span style="font-size:18px;">⭐</span><span style="font-size:18px;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span><span style="font-size:18px;opacity:.25;">⭐</span>
-        <span style="margin-left:auto;font-size:.7rem;font-weight:700;color:#92400e;">3 messages left</span>
-      </div>
-      <div class="chat-input-row" style="border-radius:0 0 14px 14px;">
-        <div class="mic-btn">🎤</div>
-        <div style="flex:1;background:#fff;border:1.5px solid rgba(3,105,161,.12);border-radius:10px;padding:9px 13px;font-size:.8rem;color:#94a3b8;font-family:'DM Sans',sans-serif;">Type or speak to Ollie...</div>
-        <div class="send-btn">➤</div>
-      </div>
+      <div class="pdh-title">Subject mastery</div>
+      <div class="pdh-row"><span>Math · Fractions</span><span>88%</span></div><div class="pdh-bar"><i style="width:88%"></i></div>
+      <div class="pdh-row"><span>Reading · Main idea</span><span>76%</span></div><div class="pdh-bar"><i style="width:76%"></i></div>
+      <div class="pdh-row"><span>Science · Cells</span><span>64%</span></div><div class="pdh-bar"><i style="width:64%"></i></div>
+      <div class="pdh-grow">🌱 <b>Growth area:</b> Dividing fractions. Practice recommended.</div>
+      <div class="pdh-samp">Sample data for illustration</div>
     </div>
     <div class="float-badge fb2">⭐ Earn Study Cards after every session</div>
   </div>
@@ -994,7 +1002,7 @@ html,body{max-width:100%;overflow-x:hidden;}
   var S={
     math:[['s','What is 3/4 + 1/8?'],['o','Good question! Before we add, look at the bottom numbers (the denominators) of both fractions. What do you notice?'],['s','They are different. One is 4 and the other is 8.'],['o','Right! The pieces are different sizes. Can we add them as they are? What could we change so they match?'],['s','Make 3/4 into eighths?'],['o','Nice thinking! How many eighths are the same as 3/4?'],['s','6/8!'],['o','Exactly. Now you can add 6/8 and 1/8. What do you get?'],['s','7/8'],['o','You solved it yourself! What was the key step that made it work?']],
     read:[['s','I do not get the difference between a main idea and a detail.'],['o','Let\u2019s try it. Here is a short paragraph: \u201CDogs are loyal. They stay close to their owners. They wait by the door.\u201D What is the one big idea?'],['s','Dogs are loyal.'],['o','Good. Now look at \u201CThey wait by the door.\u201D Does that sentence tell the big idea, or give an example of it?'],['s','An example.'],['o','Right! So how would you explain the difference between a main idea and a detail?'],['s','The main idea is the big point, and the details are examples that support it.'],['o','You explained it yourself! Want to try it with a paragraph from your homework?']],
-    sci:[['s','Why does ice melt?'],['o','What do you think happens to an ice cube that sits in a warm room?'],['s','It gets warm?'],['o','Good thinking. What is the warm air giving to the ice?'],['s','Heat energy?'],['o','Yes! What do you think heat energy does to the tiny particles inside the ice?'],['s','Makes them move faster?'],['o','Exactly. What happens when the particles move so much that they slide past each other instead of staying locked in place?'],['s','It turns into liquid water!'],['o','You explained melting yourself!']]
+    sci:[['s',"What is the difference between chloroplasts and mitochondria?"],['o',"Good question. Which of the two do plant cells have, and which do animal cells have?"],['s',"Plant cells have chloroplasts. Animal cells have mitochondria."],['o',"Partly right. Animal cells have mitochondria, but plant cells have both. What does a chloroplast do?"],['s',"It does photosynthesis and makes food."],['o',"Yes. What energy goes in, and what kind of energy is stored in the food?"],['s',"Light energy goes in, and chemical energy is stored in glucose."],['o',"Precisely. Now, what do mitochondria do with that glucose?"],['s',"They release the energy so the cell can use it."],['o',"Excellent. That process is called cellular respiration. Now explain the difference in one sentence."],['s',"Chloroplasts store energy as glucose, and mitochondria release it for the cell to use."],['o',"Well said. You can now explain how plant cells make and use energy."]]
   };
   var log,cur='read',run=0,timers=[],reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   function clear(){timers.forEach(clearTimeout);timers=[];}
@@ -1351,7 +1359,7 @@ html,body{max-width:100%;overflow-x:hidden;}
       </div>
       <div class="cb-head-txt">
         <h3>Ollie — The Homework Coach</h3>
-        <p>● Active · Structured · Guides thinking — never answers directly · Safe for all ages</p>
+        <p>● Active · Structured · Guides thinking, one step at a time · Safe for all ages</p>
       </div>
       <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:4px 12px;font-size:.65rem;color:#fff;font-weight:600;margin-left:auto;display:flex;align-items:center;gap:5px;white-space:nowrap;">
         <div style="width:7px;height:7px;background:#34d399;border-radius:50%;"></div>Active
@@ -1482,7 +1490,7 @@ html,body{max-width:100%;overflow-x:hidden;}
           <div class="fs-nav-logo-icon">
             <img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;">
           </div>
-          <div class="fs-nav-brand">The Homework Coach<small>Guidance, never answers</small></div>
+          <div class="fs-nav-brand">The Homework Coach<small>Guidance, one step at a time</small></div>
         </div>
         <div class="fs-nav-right">
           <div class="fs-nav-stars" id="fsNavStars">
@@ -1515,9 +1523,9 @@ html,body{max-width:100%;overflow-x:hidden;}
           <div class="paywall-box">
             <div style="margin-bottom:8px;"><img src="https://jessicaaguilar9437-code.github.io/homework-coach/ollie%20head%20logo.PNG" alt="Ollie" style="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:center top;"></div>
             <h3>Your child is doing great!</h3>
-            <p>Subscribe to keep going with Ollie — unlimited homework help for 3rd through 9th grade.</p>
+            <p>Subscribe to keep going with Ollie — daily homework help for 3rd through 9th grade.</p>
             <div class="paywall-features">
-              <span>✅ Unlimited sessions — 7 days a week</span>
+              <span>✅ Up to 60 messages a day — 7 days a week</span>
               <span>✅ Math, Reading, Writing, Science & Social Studies</span>
               <span>✅ 3rd through 9th grade — adjusts to your child</span>
               <span>✅ Patient and structured — one step at a time</span>
@@ -1636,6 +1644,7 @@ html,body{max-width:100%;overflow-x:hidden;}
         <div class="faq-item"><h4>Is this safe for my child to use independently?</h4><p>Yes. The Homework Coach responds exclusively to academic, age-appropriate homework questions. No personal conversations, social topics, or non-academic content — regardless of what is submitted.</p></div>
         <div class="faq-item"><h4>Which subjects and grades are supported?</h4><p>Math, Reading, Writing, Science, and Social Studies — for students in 3rd through 9th grade. The system automatically adjusts complexity based on the grade selected.</p></div>
         <div class="faq-item"><h4>Can I cancel anytime?</h4><p>Absolutely. No contracts, no commitments, no cancellation fees. Cancel directly from your account settings whenever you choose.</p></div>
+        <div class="faq-item"><h4>Is there a daily limit?</h4><p>Ollie is available every day, with a fair-use limit of 60 messages per day per account. That is plenty for a full homework session, and it resets every morning.</p></div>
       </div>
     </div>
 
@@ -1647,7 +1656,7 @@ html,body{max-width:100%;overflow-x:hidden;}
         <div class="pcard-price"><span class="pcard-amt">$20</span><span class="pcard-per">/month</span></div>
         <p class="pcard-desc">Complete academic support for one student — 3rd through 9th grade, all five subjects, available every day.</p>
         <ul class="pfeats">
-          <li><div class="pchk">✓</div>Unlimited guided homework sessions — 7 days a week</li>
+          <li><div class="pchk">✓</div>Up to 60 guided messages a day, 7 days a week</li>
           <li><div class="pchk">✓</div>All five core subjects — Math, Reading, Writing, Science & Social Studies</li>
           <li><div class="pchk">✓</div>3rd through 9th grade — automatically adjusts to your child</li>
           <li><div class="pchk">✓</div>Quiz Mode — Ollie tests your child on what they just learned</li>
@@ -2166,6 +2175,7 @@ async function ollieCall(system, userText, opts) {
       })
     });
     const data = await res.json();
+    if (data && data.error === 'daily_limit') { showDailyLimit(); return null; }
     if (res.status === 429 || (data && data.error === 'limit_reached')) { showPaywall(); return null; }
     return (data && data.content && data.content[0] && data.content[0].text) || null;
   } catch (e) { return null; } finally { clearTimeout(t); }
@@ -2360,6 +2370,7 @@ async function sendMsg() {
       const data = await res.json();
       removeTyping();
 
+      if (data?.error === 'daily_limit') { showDailyLimit(); break; }
       // Server-side limit reached — show paywall even if cookies were cleared
       if (res.status === 429 || data?.error === 'limit_reached') {
         freeMessageCount = FREE_MESSAGE_LIMIT + 1;
@@ -3273,7 +3284,7 @@ function updateFreeCountDisplay() {
   els.forEach(el => {
     if (!el) return;
     if (currentUser && isSubscribed) {
-      el.textContent = '✅ Unlimited';
+      el.textContent = '✅ Subscribed';
       el.style.color = '#10b981';
     } else {
       el.textContent = remaining + ' msgs left';
@@ -3965,6 +3976,7 @@ async function sendMsgToOllie() {
       clearTimeout(timeout);
       const data = await res.json();
       removeTyping();
+      if (data?.error === 'daily_limit') { showDailyLimit(); break; }
       if (res.status === 429 || data?.error === 'limit_reached') {
         freeMessageCount = FREE_MESSAGE_LIMIT + 1;
         showPaywall();
@@ -4401,6 +4413,12 @@ window.addEventListener('load', () => {
 
 // ── PAYWALL SYSTEM ──
 
+function showDailyLimit() {
+  try { if (typeof removeTyping === 'function') removeTyping(); } catch (e) {}
+  const msg = "You've done a lot of great work today! 🌟 Ollie is taking a rest after 60 messages. Come back tomorrow to keep learning.";
+  try { appendMsg('bot', msg); } catch (e) { alert(msg); }
+}
+
 function showPaywall() {
   const overlay = document.getElementById('paywallOverlay');
   if(overlay) {
@@ -4701,5 +4719,6 @@ function detectCorrectAnswer(text) {
   return correctPhrases.some(phrase => lower.includes(phrase));
 }
 </script>
+
 </body>
 </html>
